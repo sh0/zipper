@@ -25,11 +25,11 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <string.h>
 #include <math.h>
 #include <float.h>
-#include <tcl.h>
-#include <cyfile.h>
-#include <matrix.h>
-#include <zipper.h>
 #include <limits.h>
+
+#include "cyfile.h"
+#include "matrix.h"
+#include "zipper.h"
 #include "raw.h"
 #include "ply.h"
 
@@ -128,9 +128,15 @@ PlyProperty vert_std_props[] = {
 };
 
 /* list of property information for a vertex */
+#if 0
 PlyProperty tri_props[] = {
   {"vertex_indices", PLY_INT, PLY_INT, 0, 1, PLY_UCHAR, PLY_UCHAR, 0},
 };
+#else
+PlyProperty tri_props[] = {
+  {"vertex_index", PLY_INT, PLY_INT, 0, 1, PLY_UCHAR, PLY_UCHAR, 0},
+};
+#endif
 
 typedef struct RangePnt {
   unsigned char num_pts;
@@ -204,7 +210,7 @@ void write_ply(Scan *sc, char *filename, int writeInfo)
   tri_props[0].count_offset = toffset(nverts);
 
   /* set up PLY header information */
-  ply = ply_open_for_writing (filename, 2, elem_names, PLY_BINARY_BE, &version);
+  ply = ply_open_for_writing (filename, 2, elem_names, PLY_BINARY_LE, &version);
 
 #if 1
 

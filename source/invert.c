@@ -234,24 +234,3 @@ Double_mat dmat;
     else
         return (pos);
 }
-
-
-/******************************************************************************
-Print out a double matrix. For debugging purposes.
-******************************************************************************/
-
-static print_double(dmat)
-Double_mat dmat;
-{
-    int i, j;
-
-    printf("\n");
-
-    for (j = 0; j < MAT_SIZE; j++) {
-        for (i = 0; i < DOUBLE_SIZE; i++)
-            printf("%f  ", dmat [i] [j]);
-        printf("\n");
-    }
-
-    printf("\n");
-}

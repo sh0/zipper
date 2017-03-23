@@ -1,7 +1,3 @@
-/* module: grid.c grid format database file tools */
-
-static char SccsId[] = "@(#)cyfile.c	1.45";
-
 /* This module is used to hide the format of the Cyberware type image file
  * for historical reasons this file is in a compressed binary format and
  * may have a header which is inaccessable (easily) by some architectures,
@@ -52,14 +48,6 @@ static char SccsId[] = "@(#)cyfile.c	1.45";
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-
-#ifdef HIGHC
-#   include <fcntl.h>
-#   include <types.h>
-#   include <stat.h>
-#   include <io.h>
-#   include <stdlib.h>
-#endif
 
 #include "strings.h"
 #include "malloc.h"

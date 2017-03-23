@@ -1,9 +1,4 @@
-/* module: strings.c */
-
-static char SccsId[] = "@(#)strings.c	1.38";
-
 /* define message strings, no particular order besides numeric */
-
 char* STRXXX = "Undefined Error String #@&*!";
 char* STR001 = "Problem accessing digitizer";
 char* STR002 = "Digitizer not at home position";

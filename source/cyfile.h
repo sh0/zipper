@@ -124,13 +124,8 @@ typedef struct {
     short ltmin, ltmax;         /* latitude window limits, inclusive */
     short lgmin, lgmax;         /* longitude window limits, inclusive */
     long rmin, rmax;            /* radius range, from last run of rminmax */
-#   ifdef IRIS
-    long float scale;       /* current scale */
-    long float rprop;       /* current radius proportion */
-#   else
     double scale;           /* current scale */
     double rprop;           /* current radius proportion */
-#   endif
 } GSPEC;
 
 /* macros for standardizing the use of the grid data. gs is a pointer to the
@@ -148,13 +143,8 @@ typedef struct {
 #define INDEX(gs, lt, lg)   ((lg) * (gs)->nlt + (lt))
 #define ADDR(gs, lt, lg)    ((gs)->base + INDEX(gs, lt, lg))
 
-#ifdef HIGHC
-#   define GETR(gs, lt, lg)          getr(gs,lt,lg)
-#   define PUTR(gs, lt, lg, r)       putr(gs,lt,lg,r)
-#else
-#   define PUTR(gs, lt, lg, r)  (*ADDR(gs, lt, lg) = (r) >> (gs)->rshift)
-#   define GETR(gs, lt, lg) ((int)*ADDR(gs, lt, lg) << (gs)->rshift)
-#endif
+#define GETR(gs, lt, lg)          getr(gs,lt,lg)
+#define PUTR(gs, lt, lg, r)       putr(gs,lt,lg,r)
 
 /* flag bits for gs->flags */
 

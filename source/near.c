@@ -133,7 +133,6 @@ Mesh* mesh;
     float scale;
     int found;
     Vertex* ptr;
-    static int been_here = 0;
 
     table = mesh->table;
     scale = table->scale;
@@ -737,7 +736,7 @@ int
 is_near_edge(near)
 NearPosition* near;
 {
-    int i, is_near;
+    int is_near;
     Vertex* v;
 
     is_near = 0;

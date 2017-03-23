@@ -39,18 +39,6 @@ void right_proc();
 void quit_proc();
 void refresh_drawing();
 
-static int poly_draw_flag = 1;  /* draw polygons? */
-static int near_flag = 0;   /* show lines connecting nearby mesh points? */
-static int nearest_flag = 0;    /* similar to above */
-static int smooth_flag = 1; /* use smooth shading? */
-static int normal_flag = 0; /* display surface normals? */
-static int colors_flag = 1; /* different colors for different meshes? */
-static int true_color_flag = 0; /* display the color at vertices? */
-static int refine_flag = 1; /* use progressive refinement? */
-static int value_flag = 0;  /* show vertex value as color? */
-static int intensity_flag = 0;  /* show vertex intensities? */
-static int draw_axes = 0;   /* draw a set of axes with the object? */
-static int singlebuf = 0;
 int edge_flag = 0;      /* draw polygons on the edge of the mesh? */
 int bound_flag = 0;     /* draw edges on boundary of mesh? */
 int pick_flag = 0;      /* pick a graphical primitive? */
@@ -63,16 +51,9 @@ int copied_to_back = 0;         /* has the image been copied to backbuffer? */
 /* This should be a variable; a function of hardware performance */
 #define MAX_TRIANGLES_FOR_INTERACTION 5000
 
-
 #define MOVE_WORLD -1
 #define MOVE_LIGHT -2
 int move_num = MOVE_WORLD;      /* move an object? */
-
-/* for fast drawing while moving the object */
-
-static int pushed_mesh_level;   /* for saving the mesh level */
-static int partial_flag = 0;    /* are we only drawing part of an object? */
-static int drew_partial = 0;    /* did we draw partial object? */
 
 /* "extra" lines to be displayed each frame */
 static Vector* line1 = NULL;
@@ -176,7 +157,7 @@ Scan* sc;
 Vector invec, outvec;
 {
     int i;
-    Vector v, w;
+    Vector v;
 
     v[X] = invec[X] - sc->xtrans;
     v[Y] = invec[Y] - sc->ytrans;

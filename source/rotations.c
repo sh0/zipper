@@ -39,7 +39,7 @@ Entry:
 build_rotmat(sc)
 Scan* sc;
 {
-    int i, j, k;
+    int i, j;
     float theta;
 
     for (i = 0; i < 4; i++)

@@ -14,7 +14,8 @@ include_directories(
 )
 
 # Coverage
-add_compile_options(-fprofile-arcs -ftest-coverage --coverage)
+#add_compile_options(-fprofile-arcs -ftest-coverage --coverage)
+#add_compile_options(-Wunused)
 
 # Target
 set(PROGRAM_NAME zipper)
@@ -22,6 +23,6 @@ add_executable(${PROGRAM_NAME} ${SOURCES})
 set_property(TARGET ${PROGRAM_NAME} PROPERTY C_STANDARD 90)
 
 # Libraries
-target_link_libraries(${PROGRAM_NAME} gcov)
+#target_link_libraries(${PROGRAM_NAME} gcov)
 target_link_libraries(${PROGRAM_NAME} m)
 target_link_libraries(${PROGRAM_NAME} meschach)

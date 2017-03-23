@@ -218,7 +218,6 @@ int lt, lg;
 Vector vec;
 {
     GSPEC* gs = sc->gs;
-    short right_hand = gs->flags & FLAG_THETARIGHT;
     float to_meters = 1.0e-6;
     float xval, yval;
     float radius;

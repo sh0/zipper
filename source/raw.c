@@ -45,7 +45,7 @@ Exit:
 RawData* read_raw_geom(name)
 char* name;
 {
-    int i, j;
+    int i;
     FILE* fp;
     char filename[80];
     RawData* rawdata;
@@ -120,7 +120,6 @@ int lt, lg;
 Vector vec;
 {
     RawData* rawdata = scan->raw_geom;
-    static float big = 1e8;
     float to_meters = 1.0e-6;
 
     vec[X] = to_meters * rawdata->lgincr * (lg - rawdata->nlg / 2);
@@ -146,10 +145,9 @@ Chew back the edges of a raw range image.
 chew_raw_edges(rawdata)
 RawData* rawdata;
 {
-    int i, j, k;
+    int i, k;
     int lt, lg;
     int nlt, nlg;
-    float to_meters = 1.0e-6;
     unsigned char* chew;
     float z, nz;
     float tolerance;

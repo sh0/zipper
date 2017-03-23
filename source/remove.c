@@ -113,9 +113,13 @@ Zipper together everything all at once.
 
 do_it_all()
 {
+  printf("Zipper: eat_edge_pair()\n");
   eat_edge_pair (scans[0], scans[1]);
+  printf("Zipper: zipper_meshes()\n");
   zipper_meshes (scans[0], scans[1]);
+  printf("Zipper: fill_in_holes()\n");
   fill_in_holes (scans[0], scans[1]);
+  printf("Zipper: move_vertices()\n");
   move_vertices (scans[1], scans[0]);
 
   if (nscans >= 4) {
@@ -161,8 +165,6 @@ do_it_all()
     fill_in_holes (scans[0], scans[5]);
     move_vertices (scans[5], scans[0]);
   }
-
-  printf ("done with whole thing\n");
 }
 
 
@@ -851,7 +853,7 @@ zipper_meshes(sc1,sc2)
   }
 }
 
-Triangle *new_tris[200];
+Triangle *new_tris[20000];
 int new_tri_count;
 
 /******************************************************************************

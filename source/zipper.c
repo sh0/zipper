@@ -90,144 +90,28 @@ main(argc,argv)
   int argc;
   char *argv[];
 {
-  char *s;
-  char filename[PATH_MAX];
-  char str[200];
-  char match_file[PATH_MAX];
-  int match_flag = 0;
-  static int update_continuously = 1;
-  int i;
-
-/* for finding out how big things are */
-#if 0
-  print_sizes();
-#endif
-
   init_resolution_parameters();
 
-
-  /* command line arguments */
-
-  while(--argc > 0 && (*++argv)[0]=='-') {
-    for(s = argv[0]+1; *s; s++)
-      switch(*s) {
-        case 'c':
-          strcpy (filename, *++argv);
-          read_configuration (filename);
-          argc--;
-          break;
-        case 'f':
-          strcpy (filename, *++argv);
-          argc--;
-          break;
-        case 'm':
-          strcpy (match_file, *++argv);
-          match_flag = 1;
-          argc--;
-          break;
-        case 'z':
-          zipper_old = 1 - zipper_old;
-          break;
-        case 'p':
-          sprintf (str, "poly %s", *++argv);
-          argc -= 2;
-          break;
-        case 'k':
-          global_chew_count = atoi (*++argv);
-          argc -= 2;
-          break;
-        default:
-          break;
-      }
+  if (argc < 4) {
+    printf("Usage: zipper src1.ply src2.ply dst1.ply dst2.ply\n");
+    return 0;
   }
 
-  /* maybe read in the match file */
-  if (match_flag)
-    read_matches (match_file);
-}
-
-/******************************************************************************
-Read the (initial) configuration of several scans.
-
-Entry:
-  filename - name of configuration file
-******************************************************************************/
-
-read_configuration(filename)
-  char *filename;
-{
-  int i,j,k;
-  FILE *fp;
-  char str[200];
-  char str2[200];
-  char *ptr;
-  Scan *sc;
-  int result;
-  Quaternion quat;
-  int num;
-
-  if (strlen (filename) < 5 ||
-      strcmp (filename + strlen (filename) - 5, ".conf") != 0)
-      strcat (filename, ".conf");
-  /*
-  printf ("reading scan configuration from '%s'\n", filename);
-  */
-
-  /* open file for reading */
-  fp = fopen (filename, "r");
-  if (fp == NULL) {
-    fprintf (stderr, "read_configuration: can't open '%s'\n", filename);
-    return;
+  if (read_ply(argv[1]) != 0) {
+    printf("Failed to read input 1: %s", argv[1]);
+    return 1;
+  }
+  if (read_ply(argv[2]) != 0) {
+    printf("Failed to read input 2: %s", argv[2]);
+    return 1;
   }
 
-  /* Modified by Afra Zomorodian 7/16/95 to allow a real! script */
-  /* To be executed */
+  do_it_all();
+  //clip_triangles(scans[0], scans[1]);
 
-  fclose (fp);
-  /* do {
-    ptr = fgets (str, 200, fp);
-    if (ptr)
-      Tcl_Eval (interp, str, 0, (char **) NULL);
-  } while (ptr); */
-
-  configuration_filename = (char *)malloc(strlen(filename)+1);
-  strcpy(configuration_filename, filename);
+  write_ply(scans[0], argv[3], 1);
+  write_ply(scans[1], argv[4], 1);
 }
-
-
-/******************************************************************************
-Read a GS depth file.
-
-Entry:
-  filename - name of depth file
-
-Exit:
-  returns pointer to depth data or NULL if it couldn't open the file
-******************************************************************************/
-
-GSPEC *read_gs_file(filename)
-  char *filename;
-{
-  int fd;
-  GSPEC *gs;
-
-  /* open the geometry file */
-
-  fd = open (filename, O_RDONLY, 0666);
-  if (fd < 0) {
-    fprintf (stderr, "error opening '%s'\n", filename);
-    return (NULL);
-  }
-
-  /* read the geometry */
-
-  gs = NULL;
-  gs = cyread (gs, fd);
-  close (fd);
-
-  return (gs);
-}
-
 
 /******************************************************************************
 Return how many range image positions are between each vertex at a given

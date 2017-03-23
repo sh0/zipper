@@ -247,18 +247,18 @@ typedef struct Clip_List {
 
 /*** Distances ***/
 
-#define SPACING 0.0005		/* distance between range samples */
-				/* (0.5 mm) */
+#define SPACING 0.005		/* distance between range samples */
+				/* (5 mm) */
 #define NEAR_DIST (SPACING*2)	/* distance for nearest neighbor search */
-				/* (1 mm) */
+				/* (x mm) */
 #define TABLE_DIST NEAR_DIST	/* distance for hash table */
-				/* (1 mm) */
+				/* (x mm) */
 #define TRI_DIST (SPACING*4)	/* distance for triangle edges */
-				/* (2 mm) */
+				/* (x mm) */
 #define CONSENSUS_DIST SPACING	/* distance for consensus geometry */
-				/* (0.5 mm) */
+				/* (x mm) */
 #define FILL_DIST (TRI_DIST*0.5)/* max edge length for filling holes */
-				/* (1 mm) */
+				/* (x mm) */
 
 /* typical allowed value for dot product between surfaces in */
 /* neighbor searches */

@@ -51,74 +51,87 @@ static float CLIP_BOUNDARY_DIST_FACTOR;
 static float CLIP_BOUNDARY_DIST;
 static float CLIP_BOUNDARY_COS;
 
+void clip_triangles(Scan* sc1, Scan* sc2);
+void perform_triangle_clipping(Scan* sc1, Scan* sc2);
+void process_vertices(Vector tnorm, int tindex, Clip_List* clist, Mesh* mesh);
+int outside_mesh(Clip_List* clist);
+void list_to_tris(Triangle* tri, Clip_List* clist, Mesh* mesh);
+void new_list_to_tris(Vector tnorm, int index, Clip_List* clist, Mesh* mesh);
 Clip_List* split_list(Clip_List* clist, int index1, int index2);
+Clip_List* make_between_list(Clip_List* clist, Cut* cut1, Cut* cut2);
+Clip_List* potential_vertices(Triangle* tri);
+int find_partner_cuts(Triangle* tri, Clip_List* clist, Mesh* mesh);
+Cut* next_similar_cut(Cut* cut, Clip_List* clist, int dir);
+void sort_triangle_cuts(Triangle* tri);
+void cut_triangle(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan);
+void old_cut_triangle(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan);
+void point_line_approach(Vector pt, Vector q1, Vector q2, Vector x, float* t);
+int two_line_approach(Vector p1, Vector q1, Vector p2, Vector q2, Vector x1, Vector x2, float* t1, float* t2);
+void verts_near_edges(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float radius, float min_dot);
+void edges_near_edges(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan);
+void make_clip_triangles(Scan* scan, Mesh* clipto);
+int line_intersect_tri_single(Vector p1, Vector p2, Triangle* tri, Vector pos, float* tt, int* inward, Vector barycentric);
+int line_intersect_tri(Vector p1, Vector p2, Triangle* tri, Vector pos, float* tt, int* inward, Vector barycentric);
+float point_project_line(Vector v1, Vector v2, Vector v3, Vector p);
+int new_cut(Edge* edge, Vertex* v1, Vertex* v2, float t, float s, int inward);
+void add_cut_to_triangle(Triangle* tri, Cut* cut);
+void init_cuts(Scan* scan, Mesh* clipto);
+void create_cut_vertices(Mesh* mesh);
+void introduce_all_cuts(Mesh* mesh, Mesh* not_mesh);
+void introduce_cuts(Triangle* tri, Edge* edge, Mesh* mesh, Triangle** first_tri, Triangle** last_tri);
+void sort_cuts(Edge* edge);
+int plane_thru_vectors_double(double* v0, double* v1, double* v2, double* aa, double* bb, double* cc, double* dd);
+void double_stuff(Triangle* tri);
 
-update_clip_resolution()
+
+
+void update_clip_resolution()
 {
     CLIP_NEAR_DIST = ZIPPER_RESOLUTION * CLIP_NEAR_DIST_FACTOR;
     CLIP_BOUNDARY_DIST = ZIPPER_RESOLUTION * CLIP_BOUNDARY_DIST_FACTOR;
 }
 
-
-set_clip_near_dist_factor(factor)
-float factor;
+void set_clip_near_dist_factor(float factor)
 {
     CLIP_NEAR_DIST_FACTOR = factor;
     CLIP_NEAR_DIST = ZIPPER_RESOLUTION * CLIP_NEAR_DIST_FACTOR;
 }
 
-
-float
-get_clip_near_dist_factor()
+float get_clip_near_dist_factor()
 {
     return CLIP_NEAR_DIST_FACTOR;
 }
 
-
-set_clip_near_cos(cosine)
-float cosine;
+void set_clip_near_cos(float cosine)
 {
     CLIP_NEAR_COS = cosine;
 }
 
-
-float
-get_clip_near_cos()
+float get_clip_near_cos()
 {
     return CLIP_NEAR_COS;
 }
 
-
-set_clip_boundary_dist_factor(factor)
-float factor;
+void set_clip_boundary_dist_factor(float factor)
 {
     CLIP_BOUNDARY_DIST_FACTOR = factor;
     CLIP_BOUNDARY_DIST = ZIPPER_RESOLUTION * CLIP_BOUNDARY_DIST_FACTOR;
 }
 
-
-float
-get_clip_boundary_dist_factor()
+float get_clip_boundary_dist_factor()
 {
     return CLIP_BOUNDARY_DIST_FACTOR;
 }
 
-
-set_clip_boundary_cos(cosine)
-float cosine;
+void set_clip_boundary_cos(float cosine)
 {
     CLIP_BOUNDARY_COS = cosine;
 }
 
-
-float
-get_clip_boundary_cos()
+float get_clip_boundary_cos()
 {
     return CLIP_BOUNDARY_COS;
 }
-
-
-
 
 /******************************************************************************
 Clip one set of triangles to the edges of another.  Actually, the triangles
@@ -129,8 +142,7 @@ Entry:
   sc2 - second mesh, containing triangles to clip
 ******************************************************************************/
 
-clip_triangles(sc1, sc2)
-Scan* sc1, *sc2;
+void clip_triangles(Scan* sc1, Scan* sc2)
 {
     int i, j;
     Mesh* m1, *m2;
@@ -328,8 +340,7 @@ Entry:
   sc2 - second mesh, containing triangles to clip
 ******************************************************************************/
 
-perform_triangle_clipping(sc1, sc2)
-Scan* sc1, *sc2;
+void perform_triangle_clipping(Scan* sc1, Scan* sc2)
 {
     int i, j, k;
     Mesh* m1, *m2;
@@ -453,11 +464,7 @@ Entry:
   mesh   - mesh that triangle belongs to
 ******************************************************************************/
 
-process_vertices(tnorm, tindex, clist, mesh)
-Vector tnorm;
-int tindex;
-Clip_List* clist;
-Mesh* mesh;
+void process_vertices(Vector tnorm, int tindex, Clip_List* clist, Mesh* mesh)
 {
     int i, j;
     int index1, index2;
@@ -532,8 +539,7 @@ Exit:
   returns 1 if outside, 0 if inside
 ******************************************************************************/
 
-int outside_mesh(clist)
-Clip_List* clist;
+int outside_mesh(Clip_List* clist)
 {
     int j;
     int index1, index2;
@@ -610,10 +616,7 @@ Entry:
   mesh  - mesh that triangle should be added to
 ******************************************************************************/
 
-list_to_tris(tri, clist, mesh)
-Triangle* tri;
-Clip_List* clist;
-Mesh* mesh;
+void list_to_tris(Triangle* tri, Clip_List* clist, Mesh* mesh)
 {
     int i, j;
     Clip_Vertex* v = clist->list;
@@ -658,11 +661,7 @@ Entry:
   mesh  - mesh that triangle should be added to
 ******************************************************************************/
 
-new_list_to_tris(tnorm, index, clist, mesh)
-Vector tnorm;
-int index;
-Clip_List* clist;
-Mesh* mesh;
+void new_list_to_tris(Vector tnorm, int index, Clip_List* clist, Mesh* mesh)
 {
     int i, j;
     Clip_Vertex* v = clist->list;
@@ -801,9 +800,7 @@ Exit:
   returns the other new list
 ******************************************************************************/
 
-Clip_List* split_list(clist, index1, index2)
-Clip_List* clist;
-int index1, index2;
+Clip_List* split_list(Clip_List* clist, int index1, int index2)
 {
     int i;
     int num;
@@ -909,9 +906,7 @@ Exit:
   returns a list of vertices that lie between cuts
 ******************************************************************************/
 
-Clip_List* make_between_list(clist, cut1, cut2)
-Clip_List* clist;
-Cut* cut1, *cut2;
+Clip_List* make_between_list(Clip_List* clist, Cut* cut1, Cut* cut2)
 {
     Edge* edge, *edge2;
     Clip_List* inter_list;
@@ -980,8 +975,7 @@ Exit:
   returns pointer to list of potential vertices
 ******************************************************************************/
 
-Clip_List* potential_vertices(tri)
-Triangle* tri;
+Clip_List* potential_vertices(Triangle* tri)
 {
     int i, j;
     int count;
@@ -1065,10 +1059,7 @@ Exit:
   returns 1 if successful, 0 if we got an error
 ******************************************************************************/
 
-int find_partner_cuts(tri, clist, mesh)
-Triangle* tri;
-Clip_List* clist;
-Mesh* mesh;
+int find_partner_cuts(Triangle* tri, Clip_List* clist, Mesh* mesh)
 {
     int i, j, k;
     Cut* cut, *tcut;
@@ -1245,10 +1236,7 @@ Exit:
   returns pointer to next similar cut, or NULL if there was no such cut
 ******************************************************************************/
 
-Cut* next_similar_cut(cut, clist, dir)
-Cut* cut;
-Clip_List* clist;
-int dir;
+Cut* next_similar_cut(Cut* cut, Clip_List* clist, int dir)
 {
     int i, j;
     Clip_Vertex* list = clist->list;
@@ -1383,8 +1371,7 @@ Entry:
   tri - triangle whose cuts to sort
 ******************************************************************************/
 
-sort_triangle_cuts(tri)
-Triangle* tri;
+void sort_triangle_cuts(Triangle* tri)
 {
     int i, j, k;
     int index;
@@ -1473,10 +1460,7 @@ Entry:
   scan  - scan that triangles are in
 ******************************************************************************/
 
-cut_triangle(tri, m1, m2, scan)
-Triangle* tri;
-Mesh* m1, *m2;
-Scan* scan;
+void cut_triangle(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan)
 {
     int i, j, k;
     Vector v1, v2;
@@ -1614,10 +1598,7 @@ Entry:
   scan  - scan that triangles are in
 ******************************************************************************/
 
-old_cut_triangle(tri, m1, m2, scan)
-Triangle* tri;
-Mesh* m1, *m2;
-Scan* scan;
+void old_cut_triangle(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan)
 {
     int i, j, k;
     Vertex* vert;
@@ -1696,11 +1677,7 @@ Exit:
   t - parameter saying where x is: x = q1 + t * (q2 - q1)
 ******************************************************************************/
 
-point_line_approach(pt, q1, q2, x, t)
-Vector pt;
-Vector q1, q2;
-Vector x;
-float* t;
+void point_line_approach(Vector pt, Vector q1, Vector q2, Vector x, float* t)
 {
     Vector dir;
     float dirdot;
@@ -1734,11 +1711,7 @@ Exit:
   returns 1 if lines are parallel, 0 if they are skew
 ******************************************************************************/
 
-int two_line_approach(p1, q1, p2, q2, x1, x2, t1, t2)
-Vector p1, q1;
-Vector p2, q2;
-Vector x1, x2;
-float* t1, *t2;
+int two_line_approach(Vector p1, Vector q1, Vector p2, Vector q2, Vector x1, Vector x2, float* t1, float* t2)
 {
     Vector v1, v2;
     Vector v12;
@@ -1746,7 +1719,6 @@ float* t1, *t2;
     Vector temp;
     float dot12;
     float tt1, tt2;
-    static float epsilon = 0.0000001;
 
     vsub(q1, p1, v1);
     vsub(q2, p2, v2);
@@ -1810,13 +1782,7 @@ Exit:
   places nearby vertices in "pts_near"
 ******************************************************************************/
 
-verts_near_edges(mesh, not_mesh, pnt, norm, radius, min_dot)
-Mesh* mesh;
-Mesh* not_mesh;
-Vector pnt;
-Vector norm;
-float radius;
-float min_dot;
+void verts_near_edges(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float radius, float min_dot)
 {
     int i;
     int a, b, c;
@@ -1909,10 +1875,7 @@ Entry:
   scan  - scan that triangles are in
 ******************************************************************************/
 
-edges_near_edges(tri, m1, m2, scan)
-Triangle* tri;
-Mesh* m1, *m2;
-Scan* scan;
+void edges_near_edges(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan)
 {
     int i, j, k;
     Vertex* vert;
@@ -2003,9 +1966,7 @@ Entry:
   clipto - mesh to clip to
 ******************************************************************************/
 
-make_clip_triangles(scan, clipto)
-Scan* scan;
-Mesh* clipto;
+void make_clip_triangles(Scan* scan, Mesh* clipto)
 {
     int i, j;
     Mesh* mesh;
@@ -2184,13 +2145,7 @@ Exit:
   returns 1 if they intersect, 0 if not
 ******************************************************************************/
 
-int line_intersect_tri_single(p1, p2, tri, pos, tt, inward, barycentric)
-Vector p1, p2;
-Triangle* tri;
-Vector pos;
-float* tt;
-int* inward;
-Vector barycentric;
+int line_intersect_tri_single(Vector p1, Vector p2, Triangle* tri, Vector pos, float* tt, int* inward, Vector barycentric)
 {
     double t;
     double pdir[3];
@@ -2273,13 +2228,7 @@ Exit:
   returns 1 if they intersect, 0 if not
 ******************************************************************************/
 
-int line_intersect_tri(p1, p2, tri, pos, tt, inward, barycentric)
-Vector p1, p2;
-Triangle* tri;
-Vector pos;
-float* tt;
-int* inward;
-Vector barycentric;
+int line_intersect_tri(Vector p1, Vector p2, Triangle* tri, Vector pos, float* tt, int* inward, Vector barycentric)
 {
     double t;
     double pdir[3];
@@ -2361,9 +2310,7 @@ Exit
   returns where along segment the point projects to (1 is at v1)
 ******************************************************************************/
 
-float point_project_line(v1, v2, v3, p)
-Vector v1, v2, v3;
-Vector p;
+float point_project_line(Vector v1, Vector v2, Vector v3, Vector p)
 {
     Vector d1, d2;
     Vector cross;
@@ -2398,12 +2345,7 @@ Exit:
   returns 1 if intersection was added, 0 if the segment was added previously
 ******************************************************************************/
 
-int new_cut(edge, v1, v2, t, s, inward)
-Edge* edge;
-Vertex* v1, *v2;
-float t;
-float s;
-int inward;
+int new_cut(Edge* edge, Vertex* v1, Vertex* v2, float t, float s, int inward)
 {
     int i, j;
     int index;
@@ -2459,9 +2401,7 @@ Entry:
   cut - cut to add
 ******************************************************************************/
 
-add_cut_to_triangle(tri, cut)
-Triangle* tri;
-Cut* cut;
+void add_cut_to_triangle(Triangle* tri, Cut* cut)
 {
     int i, j;
     int forward;
@@ -2526,9 +2466,7 @@ Entry:
   clipto - mesh that will be clipped to
 ******************************************************************************/
 
-init_cuts(scan, clipto)
-Scan* scan;
-Mesh* clipto;
+void init_cuts(Scan* scan, Mesh* clipto)
 {
     int i, j;
     EdgeLoop* looplist;
@@ -2568,8 +2506,7 @@ Entry:
   mesh - the mesh in which to introduce the new vertices
 ******************************************************************************/
 
-create_cut_vertices(mesh)
-Mesh* mesh;
+void create_cut_vertices(Mesh* mesh)
 {
     int i, j;
     EdgeLoop* looplist;
@@ -2634,9 +2571,7 @@ Entry:
          want to modify
 ******************************************************************************/
 
-introduce_all_cuts(mesh, not_mesh)
-Mesh* mesh;
-Mesh* not_mesh;
+void introduce_all_cuts(Mesh* mesh, Mesh* not_mesh)
 {
     int i, j, k;
     EdgeLoop* looplist;
@@ -2731,11 +2666,7 @@ Exit:
   last_tri  - last new triangle created
 ******************************************************************************/
 
-introduce_cuts(tri, edge, mesh, first_tri, last_tri)
-Triangle* tri;
-Edge* edge;
-Mesh* mesh;
-Triangle** first_tri, ** last_tri;
+void introduce_cuts(Triangle* tri, Edge* edge, Mesh* mesh, Triangle** first_tri, Triangle** last_tri)
 {
     int i, j, k;
     int index;
@@ -2818,8 +2749,7 @@ Entry:
   edge - edge whose cuts are to be sorted
 ******************************************************************************/
 
-sort_cuts(edge)
-Edge* edge;
+void sort_cuts(Edge* edge)
 {
     int i, j, k;
     int index;
@@ -2870,9 +2800,7 @@ Exit:
   returns 0 if completed normally, 1 if degenerate plane
 ******************************************************************************/
 
-int plane_thru_vectors_double(v0, v1, v2, aa, bb, cc, dd)
-double* v0, *v1, *v2;
-double* aa, *bb, *cc, *dd;
+int plane_thru_vectors_double(double* v0, double* v1, double* v2, double* aa, double* bb, double* cc, double* dd)
 {
     double a, b, c, d;
     double len;
@@ -2917,8 +2845,7 @@ Entry:
   tri - triangle to compute edge planes and plane equation for
 ******************************************************************************/
 
-double_stuff(tri)
-Triangle* tri;
+void double_stuff(Triangle* tri)
 {
     int i, j;
     double v[3];

@@ -80,17 +80,10 @@ static int boundary_count = 0;  /* number of points that form the polygon */
 
 static int rescale_flag = 1;    /* whether to re-scale polygon to fit screen */
 static int shuffle_flag = 0;    /* whether to shuffle the edge list */
-static int drawing_flag = 0;    /* draw triangulation? */
-static int color1 = 255;    /* drawing color (negative = no drawing) */
-static int color2 = 255;    /* other drawing color */
-static int color3 = 255;    /* other drawing color */
-static int color4 = 130;    /* other drawing color */
 static int parallel_flag = 1;   /* print parallel edge warning? */
 
 static int x_screen = 500;
 static int y_screen = 500;
-
-static long dwin;
 
 static Matrix trans_mat, trans_mat_inv;
 
@@ -109,7 +102,6 @@ init_splitter(a, b, c, d)
 float a, b, c, d;
 {
     int i;
-    static int gr_init = 0;
     char line[80];
     int result;
 
@@ -118,18 +110,7 @@ float a, b, c, d;
     gets(line);
 #endif
 
-#if 0
-    if (!gr_init) {
-        prefposition(50, 50 + x_screen, 50, 50 + y_screen);
-        set_drawing_color(1, WHITE, RED, GREEN);
-        dwin = winopen("debug");
-        gr_init = 1;
-    }
-    clear_screen();
-#endif
-
     /* allocate the edge list or free up old edges */
-
     if (edges == NULL) {
         edges = (Edge**) malloc(sizeof(Edge*) * max_edges);
     } else {
@@ -138,7 +119,6 @@ float a, b, c, d;
     }
 
     /* allocate the point list or free up old points */
-
     if (points == NULL) {
         points = (Point**) malloc(sizeof(Point*) * max_points);
     } else {

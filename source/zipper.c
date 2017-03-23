@@ -25,19 +25,15 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <math.h>
 #include <string.h>
 #include <fcntl.h>
-#include <tcl.h>
-#include <tk.h> /* Changed from <tkInt.h> to this on 7/16/95 Afra Zomorodian */
 #include <strings.h>
 #include <malloc.h>
+#include <sys/time.h>
 #ifdef VOID
 #undef VOID
 #endif
-#include <cyfile.h>
-#include <zipper.h>
+#include "cyfile.h"
+#include "zipper.h"
 #include "zipglobal.h"
-
-extern int atoi();
-GSPEC *read_gs_file();
 
 /* list of scans */
 Scan *scans[SCAN_MAX];
@@ -265,8 +261,6 @@ int get_gs_coord(sc,lt,lg,vec)
   /* specify that we got a good value */
   return (0);
 }
-
-#include <sys/time.h>
 
 /******************************************************************************
 Return the number of seconds since this routine was last called.

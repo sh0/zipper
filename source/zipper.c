@@ -26,12 +26,8 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <string.h>
 #include <fcntl.h>
 #include <strings.h>
-#include <malloc.h>
 #include <sys/time.h>
-#ifdef VOID
-#undef VOID
-#endif
-#include "cyfile.h"
+
 #include "zipper.h"
 #include "zipglobal.h"
 
@@ -159,110 +155,6 @@ int level;
     max_length = MAX_EDGE_LENGTH * inc;
 
     return (max_length);
-}
-
-
-/******************************************************************************
-Pre-compute information about geometry to speed up mesh position calculations.
-
-Entry:
-  sc - geometry to augment
-******************************************************************************/
-
-setup_geometry_info(sc)
-Scan* sc;
-{
-    int lg;
-    float theta;
-    float to_meters = 1.0e-6;
-    GSPEC* gs = sc->gs;
-    short right_hand = gs->flags & FLAG_THETARIGHT;
-
-    /* pre-compute sines and cosines if this is rotational file */
-
-    if (!(gs->flags & FLAG_CARTESIAN)) {
-
-        /* allocate space for these tables */
-        sc->sin_theta = (float*) malloc(sizeof(float) * gs->nlg);
-        sc->cos_theta = (float*) malloc(sizeof(float) * gs->nlg);
-
-        /* compute and store values */
-        for (lg = 0; lg < gs->nlg; lg++) {
-            theta = lg * gs->lgincr * to_meters;
-            sc->sin_theta[lg] =  sin(theta) * to_meters;
-            sc->cos_theta[lg] = -cos(theta) * to_meters;
-            if (right_hand)
-                sc->sin_theta[lg] = -sc->sin_theta[lg];
-        }
-    }
-
-}
-
-
-/******************************************************************************
-Return the 3-space position of a mesh point in a depth file.  Distances
-are measured in meters.
-
-Entry:
-  sc    - depth scan information
-  lt,lg - lattitude and longitude of mesh point
-
-Exit:
-  vec - position of mesh point in 3-space
-  returns 0 if everything okay, 1 if mesh point has no depth value
-******************************************************************************/
-
-int get_gs_coord(sc, lt, lg, vec)
-Scan* sc;
-int lt, lg;
-Vector vec;
-{
-    GSPEC* gs = sc->gs;
-    float to_meters = 1.0e-6;
-    float xval, yval;
-    float radius;
-
-    if (gs->flags & FLAG_CARTESIAN) {
-
-        xval = (lg - gs->nlg / 2) * gs->lgincr * to_meters;
-
-        if (gs->flags & FLAG_BILATERAL)
-            yval = (lt % (gs->nlt / 2) - gs->nlt) * gs->ltincr * to_meters;
-        else
-            yval = (lt - gs->nlt / 2) * gs->ltincr * to_meters;
-
-        radius = GETR(gs, lt, lg);
-
-        if (radius != CYVOID) {
-            vec[X] = xval;
-            vec[Y] = yval;
-            vec[Z] = radius * to_meters;
-        } else {
-            vec[X] = 0;
-            vec[Y] = 0;
-            vec[Z] = 0;
-            return (1);
-        }
-
-    } else {
-
-        radius = GETR(gs, lt, lg);
-
-        if (radius != CYVOID) {
-            vec[X] = radius * sc->sin_theta[lg];
-            vec[Y] = (lt - gs->nlt / 2) * gs->ltincr * to_meters;
-            vec[Z] = radius * sc->cos_theta[lg];
-        } else {
-            vec[X] = 0;
-            vec[Y] = 0;
-            vec[Z] = 0;
-            return (1);
-        }
-
-    }
-
-    /* specify that we got a good value */
-    return (0);
 }
 
 /******************************************************************************

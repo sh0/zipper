@@ -22,12 +22,12 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <math.h>
 #include <string.h>
 #include <fcntl.h>
+
 #include "strings.h"
-#include "malloc.h"
-#include "cyfile.h"
 #include "zipper.h"
 #include "raw.h"
 
@@ -107,7 +107,6 @@ Scan* sc;
 int level;
 {
     Mesh* mesh;
-    Mesh* make_mesh();
     Mesh* make_mesh_raw();
     Mesh* make_mesh_ply();
 
@@ -122,7 +121,8 @@ int level;
     /* create the mesh */
 
     if (sc->file_type == CYFILE)
-        mesh = make_mesh(sc, level, TABLE_DIST * level_to_inc(level));
+        assert(0);
+        //mesh = make_mesh(sc, level, TABLE_DIST * level_to_inc(level));
     else if (sc->file_type == RAWFILE)
         mesh = make_mesh_raw(sc, level, TABLE_DIST * level_to_inc(level));
     else if (sc->file_type == PLYRANGEFILE)
@@ -150,7 +150,7 @@ Entry:
 Exit:
   returns pointer to newly-created mesh
 ******************************************************************************/
-
+#if 0
 Mesh* make_mesh(sc, level, table_dist)
 Scan* sc;
 int level;
@@ -352,7 +352,7 @@ float table_dist;
     /* return pointer to new mesh */
     return (mesh);
 }
-
+#endif
 
 /******************************************************************************
 Create a triangle mesh from scan data.

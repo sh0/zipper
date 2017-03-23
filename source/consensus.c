@@ -22,8 +22,8 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "malloc.h"
-#include "cyfile.h"
+#include <assert.h>
+
 #include "zipper.h"
 #include "matrix.h"
 #include "zipglobal.h"
@@ -378,7 +378,6 @@ float k_scale;
     float search_dist;
     float normal_dist;
     Vertex* v;
-    Mesh* make_mesh();
     Mesh* make_mesh_raw();
     Mesh* make_mesh_ply();
     Vertex* near_vert;
@@ -412,7 +411,8 @@ float k_scale;
 
         /* create a mesh of the appropriate level */
         if (scans[i]->file_type == CYFILE)
-            tmesh = make_mesh(scans[i], level, normal_dist);
+            assert(0);
+            //tmesh = make_mesh(scans[i], level, normal_dist);
         else if (scans[i]->file_type == RAWFILE)
             tmesh = make_mesh_raw(scans[i], level, normal_dist);
         else if (scans[i]->file_type == PLYRANGEFILE)
@@ -484,7 +484,8 @@ float k_scale;
 
         /* create a mesh of the appropriate level */
         if (scans[i]->file_type == CYFILE)
-            tmesh = make_mesh(scans[i], level, search_dist);
+            assert(0);
+            //tmesh = make_mesh(scans[i], level, search_dist);
         else if (scans[i]->file_type == RAWFILE)
             tmesh = make_mesh_raw(scans[i], level, search_dist);
         else if (scans[i]->file_type == PLYRANGEFILE)
@@ -542,7 +543,6 @@ int num_scans, level;
     float search_dist;
     float normal_dist;
     Vertex* v;
-    Mesh* make_mesh();
     Mesh* make_mesh_raw();
     Mesh* make_mesh_ply();
     Vertex* near_vert;
@@ -578,7 +578,8 @@ int num_scans, level;
 
             /* create a mesh of the appropriate level */
             if (scan_list[i]->file_type == CYFILE)
-                tmesh = make_mesh(scan_list[i], level, normal_dist);
+                assert(0);
+                //tmesh = make_mesh(scan_list[i], level, normal_dist);
             else if (scan_list[i]->file_type == RAWFILE)
                 tmesh = make_mesh_raw(scan_list[i], level, normal_dist);
             else if (scan_list[i]->file_type == PLYRANGEFILE)
@@ -670,7 +671,8 @@ int num_scans, level;
 
             /* create a mesh of the appropriate level */
             if (scan_list[i]->file_type == CYFILE)
-                tmesh = make_mesh(scan_list[i], level, search_dist);
+                assert(0);
+                //tmesh = make_mesh(scan_list[i], level, search_dist);
             else if (scan_list[i]->file_type == RAWFILE)
                 tmesh = make_mesh_raw(scan_list[i], level, search_dist);
             else if (scan_list[i]->file_type == PLYRANGEFILE)
@@ -987,7 +989,7 @@ float k_scale;
     int spacing;
     float search_dist;
     Vertex* v;
-    Mesh* make_mesh();
+    //Mesh* make_mesh();
     Mesh* make_mesh_raw();
     Mesh* make_mesh_ply();
 
@@ -1012,7 +1014,8 @@ float k_scale;
 
         /* create a mesh of the appropriate level */
         if (scans[i]->file_type == CYFILE)
-            tmesh = make_mesh(scans[i], level, search_dist);
+            assert(0);
+            //tmesh = make_mesh(scans[i], level, search_dist);
         else if (scans[i]->file_type == RAWFILE)
             tmesh = make_mesh_raw(scans[i], level, search_dist);
         else if (scans[i]->file_type == PLYRANGEFILE)

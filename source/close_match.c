@@ -21,13 +21,8 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "malloc.h"
-#include "cyfile.h"
-#include "zipper.h"
 
-#if 0
-extern double G_Tolerance;
-#endif
+#include "zipper.h"
 
 #define  MATCH_MAX  20
 extern Scan* match_from[];

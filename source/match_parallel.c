@@ -22,8 +22,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "malloc.h"
-#include "cyfile.h"
 #include "zipper.h"
 #include "matrix.h"
 #include "zipglobal.h"

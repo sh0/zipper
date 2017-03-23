@@ -23,13 +23,8 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <math.h>
 #include <string.h>
 #include <fcntl.h>
-#include <tcl.h>
 #include <strings.h>
-#include <malloc.h>
-#ifdef VOID
-#undef VOID
-#endif
-#include <cyfile.h>
+
 #include <zipper.h>
 #include "zipglobal.h"
 

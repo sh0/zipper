@@ -11,7 +11,6 @@ Some of these routines were taken from:
 #include <matrix.h>
 #include <math.h>
 
-
 /******************************************************************************
 Convert a quaternion into a rotation matrix.  Does *not* assume a unit
 quaternion.  From Ken Shoemake.

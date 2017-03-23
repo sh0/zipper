@@ -28,11 +28,11 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <event.h>
-#include <matrix.h>
+
 #include <meschach/matrix.h>
 #include <meschach/matrix2.h>
-#include <malloc.h>
+
+#include "matrix.h"
 
 typedef float Matrix3[3][3];
 

@@ -21,8 +21,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "malloc.h"
-#include "cyfile.h"
 #include "zipper.h"
 
 static int large_search_flag = 0;

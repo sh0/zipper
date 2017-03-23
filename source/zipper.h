@@ -22,9 +22,10 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #define ZIPPER_H
 
 #include <matrix.h>
-
-#include <malloc.h>
 #include <limits.h>
+
+#define MAX(a,b)    ((a)>(b)?(a):(b))       /* return greater of a and b */
+#define MIN(a,b)    ((a)<(b)?(a):(b))       /* return lesser of a and b */
 
 struct Triangle;
 struct Mesh;
@@ -168,7 +169,6 @@ typedef struct Mesh {       /* mesh of triangles */
 typedef struct Scan {       /* information about one depth scan */
     char name[80];        /* name of scan */
     int button_index;             /* number used to refer to TCL buttons */
-    GSPEC* gs;            /* geometry, if read from cyfile */
     struct RawData* raw_geom; /* geometry if read from a raw file */
     struct RangeData* ply_geom;   /* geometry if read from a PLY file */
     float* sin_theta;     /* tables for speedy drawing */

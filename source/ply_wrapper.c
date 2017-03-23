@@ -27,7 +27,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <float.h>
 #include <limits.h>
 
-#include "cyfile.h"
 #include "matrix.h"
 #include "zipper.h"
 #include "raw.h"

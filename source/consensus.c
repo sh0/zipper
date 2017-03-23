@@ -153,7 +153,7 @@ float k_scale;
     /* initialize the consensus geometry information at each vertex */
 
     for (i = 0; i < mesh->nverts; i++) {
-        cinfo = (Cinfo*) myalloc(sizeof(Cinfo));
+        cinfo = (Cinfo*) malloc(sizeof(Cinfo));
         mesh->verts[i]->cinfo = cinfo;
         vset(cinfo->pos, 0.0, 0.0, 0.0);
         vset(cinfo->normal, 0.0, 0.0, 0.0);
@@ -265,7 +265,7 @@ int num_scans, level;
     /* initialize the consensus geometry information at each vertex */
 
     for (i = 0; i < mesh->nverts; i++) {
-        cinfo = (Cinfo*) myalloc(sizeof(Cinfo));
+        cinfo = (Cinfo*) malloc(sizeof(Cinfo));
         mesh->verts[i]->cinfo = cinfo;
         vset(cinfo->pos, 0.0, 0.0, 0.0);
         vset(cinfo->normal, 0.0, 0.0, 0.0);
@@ -1149,7 +1149,7 @@ float radius;
     /* allocate room to keep nearby points */
     if (pts_near == NULL) {
         pts_near_max = 50;
-        pts_near = (Vertex**) myalloc(sizeof(Vertex*) * pts_near_max);
+        pts_near = (Vertex**) malloc(sizeof(Vertex*) * pts_near_max);
     }
     pts_near_num = 0;
 

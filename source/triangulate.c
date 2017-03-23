@@ -25,7 +25,7 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <math.h>
 #include <matrix.h>
 #include <triangulate.h>
-#include <myalloc.h>
+#include <malloc.h>
 
 /* screen stuff */
 
@@ -131,7 +131,7 @@ float a, b, c, d;
     /* allocate the edge list or free up old edges */
 
     if (edges == NULL) {
-        edges = (Edge**) myalloc(sizeof(Edge*) * max_edges);
+        edges = (Edge**) malloc(sizeof(Edge*) * max_edges);
     } else {
         for (i = 0; i < nedges; i++)
             free(edges[i]);
@@ -140,7 +140,7 @@ float a, b, c, d;
     /* allocate the point list or free up old points */
 
     if (points == NULL) {
-        points = (Point**) myalloc(sizeof(Point*) * max_points);
+        points = (Point**) malloc(sizeof(Point*) * max_points);
     } else {
         for (i = 0; i < npoints; i++) {
             free(points[i]->edges);
@@ -198,7 +198,7 @@ int index;
     vec[Z] = zz;
     vapply(trans_mat, vec, tvec);
 
-    pt = (Point*) myalloc(sizeof(Point));
+    pt = (Point*) malloc(sizeof(Point));
     pt->pos[X] = tvec[X];
     pt->pos[Y] = tvec[Y];
     pt->pos[Z] = 0;
@@ -207,7 +207,7 @@ int index;
     pt->pos3d[Z] = zz;
     pt->nedges = 0;
     pt->max_edges = 6;
-    pt->edges = (Edge**) myalloc(sizeof(Edge*) * pt->max_edges);
+    pt->edges = (Edge**) malloc(sizeof(Edge*) * pt->max_edges);
     pt->boundary = 1;
     pt->index = index;
 
@@ -255,7 +255,7 @@ int index;
 
     /* add the point */
 
-    pt = (Point*) myalloc(sizeof(Point));
+    pt = (Point*) malloc(sizeof(Point));
     pt->pos[X] = tvec[X];
     pt->pos[Y] = tvec[Y];
     pt->pos[Z] = 0;
@@ -264,7 +264,7 @@ int index;
     pt->pos3d[Z] = zz;
     pt->nedges = 0;
     pt->max_edges = 6;
-    pt->edges = (Edge**) myalloc(sizeof(Edge*) * pt->max_edges);
+    pt->edges = (Edge**) malloc(sizeof(Edge*) * pt->max_edges);
     pt->boundary = 0;
     pt->index = index;
 
@@ -365,7 +365,7 @@ int i, j;
 
     /* make the new edge */
 
-    edge = (Edge*) myalloc(sizeof(Edge));
+    edge = (Edge*) malloc(sizeof(Edge));
     edge->p1 = i;
     edge->p2 = j;
     edge->final = 0;
@@ -476,7 +476,7 @@ int size;
     char* temp;
     extern double drand48();
 
-    temp = (char*) myalloc(size);
+    temp = (char*) malloc(size);
 
     for (i = num - 1; i > 0; i--) {
 
@@ -777,7 +777,7 @@ int greedy_connect()
     /* allocate space for the final collection of edges */
 
     final_goal = 3 * (npoints - 2) - boundary_count + 3;
-    final = (Edge**) myalloc(sizeof(Edge*) * final_goal);
+    final = (Edge**) malloc(sizeof(Edge*) * final_goal);
 
 #if 0
     if (final == NULL) {
@@ -895,7 +895,7 @@ int whoops_flag;
     /* allocate space for triangles */
 
     tri_goal = nfinal - npoints + 1;
-    tris = (Triangle*) myalloc(sizeof(Triangle) * (tri_goal + TRI_GOAL_SLOP));
+    tris = (Triangle*) malloc(sizeof(Triangle) * (tri_goal + TRI_GOAL_SLOP));
     ntris = 0;
 
     /* check for triangle allocation */

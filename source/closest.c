@@ -32,7 +32,7 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <matrix.h>
 #include <meschach/matrix.h>
 #include <meschach/matrix2.h>
-#include <myalloc.h>
+#include <malloc.h>
 
 typedef float Matrix3[3][3];
 
@@ -63,7 +63,7 @@ init_pairs()
     npairs = 0;
 
     max_pairs = 5000;
-    pairs = (Pair**) myalloc(sizeof(Pair*) * max_pairs);
+    pairs = (Pair**) malloc(sizeof(Pair*) * max_pairs);
 }
 
 
@@ -86,7 +86,7 @@ float weight;
         pairs = (Pair**) realloc(pairs, sizeof(Pair*) * max_pairs);
     }
 
-    new = (Pair*) myalloc(sizeof(Pair));
+    new = (Pair*) malloc(sizeof(Pair));
     pairs[npairs] = new;
     npairs++;
 

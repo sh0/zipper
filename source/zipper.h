@@ -23,7 +23,7 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include <matrix.h>
 
-#include <myalloc.h>
+#include <malloc.h>
 #include <limits.h>
 
 struct Triangle;

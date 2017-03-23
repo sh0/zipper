@@ -841,17 +841,17 @@ int index1, index2;
     }
 
     /* make a copy of the original list */
-    old_list = (Clip_List*) myalloc(sizeof(Clip_List));
-    old_list->list = (Clip_Vertex*) myalloc(sizeof(Clip_Vertex) * clist->count);
+    old_list = (Clip_List*) malloc(sizeof(Clip_List));
+    old_list->list = (Clip_Vertex*) malloc(sizeof(Clip_Vertex) * clist->count);
     old_list->count = clist->count;
     for (i = 0; i < old_list->count; i++)
         old_list->list[i] = clist->list[i];
 
     /*** create one of the new lists ***/
 
-    clist2 = (Clip_List*) myalloc(sizeof(Clip_List));
+    clist2 = (Clip_List*) malloc(sizeof(Clip_List));
     clist2->count = index2 - index1 + 1 + inter_list->count;
-    clist2->list = (Clip_Vertex*) myalloc(sizeof(Clip_Vertex) * clist2->count);
+    clist2->list = (Clip_Vertex*) malloc(sizeof(Clip_Vertex) * clist2->count);
 
     /* copy appropriate subset of old vertices */
     num = 0;
@@ -920,11 +920,11 @@ Cut* cut1, *cut2;
     int inter_num, inter_max;
 
     /* create list of vertices along loop edge that are between the two cuts */
-    inter_list = (Clip_List*) myalloc(sizeof(Clip_List));
+    inter_list = (Clip_List*) malloc(sizeof(Clip_List));
     inter_max = 4;
     inter_num = 0;
     inter_list->list = (Clip_Vertex*)
-                       myalloc(sizeof(Clip_Vertex) * inter_max);
+                       malloc(sizeof(Clip_Vertex) * inter_max);
 
     /* return an empty list if there are no vertices between the cuts */
     if (cut1->edge == cut2->edge) {
@@ -996,8 +996,8 @@ Triangle* tri;
 
     count = tri->clips[0].cut_num + tri->clips[1].cut_num +
             tri->clips[2].cut_num + 3;
-    clist = (Clip_List*) myalloc(sizeof(Clip_List));
-    clist->list = (Clip_Vertex*) myalloc(sizeof(Clip_Vertex) * count);
+    clist = (Clip_List*) malloc(sizeof(Clip_List));
+    clist->list = (Clip_Vertex*) malloc(sizeof(Clip_Vertex) * count);
     clist->count = count;
     list = clist->list;
 
@@ -1086,7 +1086,7 @@ Mesh* mesh;
     Cut* next_similar_cut();
 
     /* allocate space for temporary cut list */
-    loop_list = (Clip_Vertex**) myalloc(sizeof(Clip_Vertex*) * clist->count);
+    loop_list = (Clip_Vertex**) malloc(sizeof(Clip_Vertex*) * clist->count);
 
     /* set all cuts to be initially un-partnered */
     for (i = 0; i < clist->count; i++)
@@ -1834,7 +1834,7 @@ float min_dot;
     /* allocate room to keep nearby points */
     if (pts_near == NULL) {
         pts_near_max = 50;
-        pts_near = (Vertex**) myalloc(sizeof(Vertex*) * pts_near_max);
+        pts_near = (Vertex**) malloc(sizeof(Vertex*) * pts_near_max);
     }
 
     /* use squared distance */
@@ -1930,7 +1930,7 @@ Scan* scan;
     /* allocate room to keep nearby edges */
     if (edges_near == NULL) {
         edges_near_max = 50;
-        edges_near = (Edge**) myalloc(sizeof(Edge*) * edges_near_max);
+        edges_near = (Edge**) malloc(sizeof(Edge*) * edges_near_max);
     }
 
     /* mark each edge of the vertices as untouched */
@@ -2050,22 +2050,22 @@ Mesh* clipto;
 
     /* create new mesh for these edges */
 
-    scan->edge_mesh = (Mesh*) myalloc(sizeof(Mesh));
+    scan->edge_mesh = (Mesh*) malloc(sizeof(Mesh));
     mesh = scan->edge_mesh;
 
     /* allocate space for new triangles and vertices */
 
     mesh->nverts = 0;
     mesh->max_verts = 100;
-    mesh->verts = (Vertex**) myalloc(sizeof(Vertex*) * mesh->max_verts);
+    mesh->verts = (Vertex**) malloc(sizeof(Vertex*) * mesh->max_verts);
 
     mesh->ntris = 0;
     mesh->max_tris = mesh->max_verts * 2;
-    mesh->tris = (Triangle**) myalloc(sizeof(Triangle*) * mesh->max_tris);
+    mesh->tris = (Triangle**) malloc(sizeof(Triangle*) * mesh->max_tris);
 
     mesh->nedges = 0;
     mesh->max_edges = 20;
-    mesh->edges = (Edge**) myalloc(sizeof(Edge*) * mesh->max_edges);
+    mesh->edges = (Edge**) malloc(sizeof(Edge*) * mesh->max_edges);
     mesh->edges_valid = 0;
     mesh->eat_list_max = 20;
 
@@ -2427,7 +2427,7 @@ int inward;
     }
 
     /* add the cut to the list */
-    cut = (Cut*) myalloc(sizeof(Cut));
+    cut = (Cut*) malloc(sizeof(Cut));
     cut->v1 = v1;
     cut->v2 = v2;
     cut->edge = edge;
@@ -2475,14 +2475,14 @@ Cut* cut;
     /* and if not, create a list of three clipped edges */
 
     if (tri->clips == NULL) {
-        clips = (Clipped_Edge*) myalloc(sizeof(Clipped_Edge) * 3);
+        clips = (Clipped_Edge*) malloc(sizeof(Clipped_Edge) * 3);
         tri->clips = clips;
         for (i = 0; i < 3; i++) {
             clips[i].v1 = tri->verts[i];
             clips[i].v2 = tri->verts[(i + 1) % 3];
             clips[i].cut_max = 2;
             clips[i].cut_num = 0;
-            clips[i].cuts = (Cut**) myalloc(sizeof(Cut*) * clips[i].cut_max);
+            clips[i].cuts = (Cut**) malloc(sizeof(Cut*) * clips[i].cut_max);
             clips[i].perp_intersect = 0;
         }
     }
@@ -2552,7 +2552,7 @@ Mesh* clipto;
 
             if (edge->cuts == NULL) {
                 edge->cut_max = 4;
-                edge->cuts = (Cut**) myalloc(sizeof(Cut*) * edge->cut_max);
+                edge->cuts = (Cut**) malloc(sizeof(Cut*) * edge->cut_max);
             }
 
             edge->cut_num = 0;
@@ -2929,7 +2929,7 @@ Triangle* tri;
     More_Tri_Stuff* more;
 
     /* create room for new info */
-    more = (More_Tri_Stuff*) myalloc(sizeof(More_Tri_Stuff));
+    more = (More_Tri_Stuff*) malloc(sizeof(More_Tri_Stuff));
     tri->more = more;
 
     /* find plane equation of triangle */

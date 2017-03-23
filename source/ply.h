@@ -126,13 +126,7 @@ typedef struct PlyFile {        /* description of PLY file */
     PlyOtherElems* other_elems;   /* "other" elements from a PLY file */
 } PlyFile;
 
-/* memory allocation */
-extern char* my_alloc();
-#define myalloc(mem_size) my_alloc((mem_size), __LINE__, __FILE__)
-
-
 /*** delcaration of routines ***/
-
 extern PlyFile* ply_write(FILE*, int, char**, int);
 extern PlyFile* ply_open_for_writing(char*, int, char**, int, float*);
 extern void ply_describe_element(PlyFile*, char*, int, int, PlyProperty*);

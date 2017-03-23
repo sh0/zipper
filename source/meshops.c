@@ -816,8 +816,8 @@ Vertex* v;
     mesh = scan->meshes[mesh_level];
 
     /* allocate room for vertices surrounding "v" */
-    vin  = (Vertex**) myalloc(sizeof(Vertex*) * v->ntris);
-    vout = (Vertex**) myalloc(sizeof(Vertex*) * v->ntris);
+    vin  = (Vertex**) malloc(sizeof(Vertex*) * v->ntris);
+    vout = (Vertex**) malloc(sizeof(Vertex*) * v->ntris);
 
     /* collect together the vertices adjacent to v, according to triangles */
     for (j = 0; j < v->ntris; j++) {
@@ -1382,7 +1382,7 @@ Scan* scan;
 
     for (i = 0; i < mesh->ntris; i++) {
         tri = mesh->tris[i];
-        tri->more = (More_Tri_Stuff*) myalloc(sizeof(More_Tri_Stuff));
+        tri->more = (More_Tri_Stuff*) malloc(sizeof(More_Tri_Stuff));
         tri->more->mids[0] = NULL;
         tri->more->mids[1] = NULL;
         tri->more->mids[2] = NULL;
@@ -1545,7 +1545,7 @@ Scan* scan;
     }
 
     /* make a list of vertices around the loop */
-    vlist = (Vertex**) myalloc(sizeof(Vertex*) * vcount);
+    vlist = (Vertex**) malloc(sizeof(Vertex*) * vcount);
     index = 0;
     been_around = 0;
     for (e = fedge; e != fedge || !been_around; e = e->prev) {

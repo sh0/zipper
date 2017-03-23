@@ -293,7 +293,7 @@ Scan* sc1, *sc2;
 
         if (tri->clips == NULL) {
             Clipped_Edge* clips;
-            clips = (Clipped_Edge*) myalloc(sizeof(Clipped_Edge) * 3);
+            clips = (Clipped_Edge*) malloc(sizeof(Clipped_Edge) * 3);
             tri->clips = clips;
             for (k = 0; k < 3; k++) {
                 clips[k].v1 = tri->verts[k];
@@ -303,7 +303,7 @@ Scan* sc1, *sc2;
                 clips[k].cut_max = 2;
                 clips[k].cut_num = 0;
                 clips[k].cuts = (Cut**)
-                                myalloc(sizeof(Cut*) * clips[k].cut_max);
+                                malloc(sizeof(Cut*) * clips[k].cut_max);
                 clips[k].perp_intersect = 1;
                 clips[k].done_edge = 0;
             }
@@ -462,7 +462,7 @@ float radius;
     /* allocate room to keep nearby points */
     if (pts_near == NULL) {
         pts_near_max = 50;
-        pts_near = (Vertex**) myalloc(sizeof(Vertex*) * pts_near_max);
+        pts_near = (Vertex**) malloc(sizeof(Vertex*) * pts_near_max);
     }
 
     /* use squared distance */
@@ -588,7 +588,7 @@ float dot;
 
     /*** create a cut record ***/
 
-    cut = (Cut*) myalloc(sizeof(Cut));
+    cut = (Cut*) malloc(sizeof(Cut));
     cut->v1 = v1;
     cut->v2 = v2;
     cut->tri = near_tri;
@@ -686,12 +686,12 @@ Triangle* tri;
 {
     More_Tri_Stuff* more;
 
-    more = (More_Tri_Stuff*) myalloc(sizeof(More_Tri_Stuff));
+    more = (More_Tri_Stuff*) malloc(sizeof(More_Tri_Stuff));
     tri->more = more;
 
     more->cut_max = 4;
     more->cut_num = 0;
-    more->cuts = (Cut**) myalloc(sizeof(Cut*) * more->cut_max);
+    more->cuts = (Cut**) malloc(sizeof(Cut*) * more->cut_max);
     more->clip_count = 0;
     more->clip_flag = 0;
 }
@@ -864,7 +864,7 @@ Scan* sc1, *sc2;
 
         /* create clip list */
         more->clip_verts = (Vertex**)
-                           myalloc(sizeof(Vertex*) * more->clip_count);
+                           malloc(sizeof(Vertex*) * more->clip_count);
         k = 0;
         for (j = out_vert; j != in_vert; j = (j + 1) % clist->count) {
             more->clip_verts[k] = v[j].vert;

@@ -260,9 +260,9 @@ unsigned int color;
     /* create new space for lines if necessary */
     if (line1 == NULL) {
         line_max = 200;
-        line1 = (Vector*) myalloc(sizeof(Vector) * line_max);
-        line2 = (Vector*) myalloc(sizeof(Vector) * line_max);
-        line_colors = (unsigned int*) myalloc(sizeof(unsigned int) * line_max);
+        line1 = (Vector*) malloc(sizeof(Vector) * line_max);
+        line2 = (Vector*) malloc(sizeof(Vector) * line_max);
+        line_colors = (unsigned int*) malloc(sizeof(unsigned int) * line_max);
     }
 
     /* reallocate more space if necessary */

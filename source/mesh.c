@@ -194,7 +194,7 @@ float table_dist;
 
     /* create mesh */
 
-    mesh = (Mesh*) myalloc(sizeof(Mesh));
+    mesh = (Mesh*) malloc(sizeof(Mesh));
 
     /* allocate space for new triangles and vertices */
 
@@ -202,15 +202,15 @@ float table_dist;
     max_lt = (gs->nlt - 1) / inc + 1;
     max_lg = (gs->nlg - 1) / inc + 1;
     mesh->max_verts = max_lt * max_lg;
-    mesh->verts = (Vertex**) myalloc(sizeof(Vertex*) * mesh->max_verts);
+    mesh->verts = (Vertex**) malloc(sizeof(Vertex*) * mesh->max_verts);
 
     mesh->ntris = 0;
     mesh->max_tris = mesh->max_verts * 2;
-    mesh->tris = (Triangle**) myalloc(sizeof(Triangle*) * mesh->max_tris);
+    mesh->tris = (Triangle**) malloc(sizeof(Triangle*) * mesh->max_tris);
 
     mesh->nedges = 0;
     mesh->max_edges = 200;
-    mesh->edges = (Edge**) myalloc(sizeof(Edge*) * mesh->max_edges);
+    mesh->edges = (Edge**) malloc(sizeof(Edge*) * mesh->max_edges);
     mesh->edges_valid = 0;
     mesh->eat_list_max = 200;
     mesh->parent_scan = sc;
@@ -218,7 +218,7 @@ float table_dist;
     /* create table saying whether a vertex is okay and where it is */
     /* in the vertex list */
 
-    vert_index = (int*) myalloc(sizeof(int) * max_lt * max_lg);
+    vert_index = (int*) malloc(sizeof(int) * max_lt * max_lg);
     for (i = 0; i < max_lt * max_lg; i++)
         vert_index[i] = -1;
 
@@ -399,7 +399,7 @@ float table_dist;
 
     /* create mesh */
 
-    mesh = (Mesh*) myalloc(sizeof(Mesh));
+    mesh = (Mesh*) malloc(sizeof(Mesh));
 
     /* allocate space for new triangles and vertices */
 
@@ -407,15 +407,15 @@ float table_dist;
     max_lt = (rawdata->nlt - 1) / inc + 1;
     max_lg = (rawdata->nlg - 1) / inc + 1;
     mesh->max_verts = max_lt * max_lg;
-    mesh->verts = (Vertex**) myalloc(sizeof(Vertex*) * mesh->max_verts);
+    mesh->verts = (Vertex**) malloc(sizeof(Vertex*) * mesh->max_verts);
 
     mesh->ntris = 0;
     mesh->max_tris = mesh->max_verts * 2;
-    mesh->tris = (Triangle**) myalloc(sizeof(Triangle*) * mesh->max_tris);
+    mesh->tris = (Triangle**) malloc(sizeof(Triangle*) * mesh->max_tris);
 
     mesh->nedges = 0;
     mesh->max_edges = 200;
-    mesh->edges = (Edge**) myalloc(sizeof(Edge*) * mesh->max_edges);
+    mesh->edges = (Edge**) malloc(sizeof(Edge*) * mesh->max_edges);
     mesh->edges_valid = 0;
     mesh->eat_list_max = 200;
     mesh->parent_scan = sc;
@@ -423,7 +423,7 @@ float table_dist;
     /* create table saying whether a vertex is okay and where it is */
     /* in the vertex list */
 
-    vert_index = (int*) myalloc(sizeof(int) * max_lt * max_lg);
+    vert_index = (int*) malloc(sizeof(int) * max_lt * max_lg);
     for (i = 0; i < max_lt * max_lg; i++)
         vert_index[i] = -1;
 
@@ -567,7 +567,7 @@ float table_dist;
 
     /* create mesh */
 
-    mesh = (Mesh*) myalloc(sizeof(Mesh));
+    mesh = (Mesh*) malloc(sizeof(Mesh));
 
     /* allocate space for new triangles and vertices */
 
@@ -577,22 +577,22 @@ float table_dist;
     nlt = plydata->nlt;
     nlg = plydata->nlg;
     mesh->max_verts = max_lt * max_lg;
-    mesh->verts = (Vertex**) myalloc(sizeof(Vertex*) * mesh->max_verts);
+    mesh->verts = (Vertex**) malloc(sizeof(Vertex*) * mesh->max_verts);
 
     mesh->ntris = 0;
     mesh->max_tris = mesh->max_verts * 2;
-    mesh->tris = (Triangle**) myalloc(sizeof(Triangle*) * mesh->max_tris);
+    mesh->tris = (Triangle**) malloc(sizeof(Triangle*) * mesh->max_tris);
 
     mesh->nedges = 0;
     mesh->max_edges = 200;
-    mesh->edges = (Edge**) myalloc(sizeof(Edge*) * mesh->max_edges);
+    mesh->edges = (Edge**) malloc(sizeof(Edge*) * mesh->max_edges);
     mesh->edges_valid = 0;
     mesh->eat_list_max = 200;
     mesh->parent_scan = sc;
 
     /* create a list saying whether a vertex is going to be used */
 
-    vert_index = (int*) myalloc(sizeof(int) * plydata->num_points);
+    vert_index = (int*) malloc(sizeof(int) * plydata->num_points);
     for (i = 0; i < plydata->num_points; i++)
         vert_index[i] = -1;
 
@@ -956,7 +956,7 @@ Vector vec;
 
     /* create new vertex and add it to the list */
 
-    vert = (Vertex*) myalloc(sizeof(Vertex));
+    vert = (Vertex*) malloc(sizeof(Vertex));
     vert->coord[X] = vec[X];
     vert->coord[Y] = vec[Y];
     vert->coord[Z] = vec[Z];
@@ -972,11 +972,11 @@ Vector vec;
     vert->cinfo = NULL;
     vert->old_mesh = mesh;
     vert->confidence = 0;
-    vert->tris = (Triangle**) myalloc(sizeof(Triangle*) * vert->max_tris);
+    vert->tris = (Triangle**) malloc(sizeof(Triangle*) * vert->max_tris);
 
     vert->nverts = 0;
     vert->max_verts = 8;
-    vert->verts = (Vertex**) myalloc(sizeof(Vertex*) * vert->max_verts);
+    vert->verts = (Vertex**) malloc(sizeof(Vertex*) * vert->max_verts);
 
     vert->nedges = 0;
     vert->max_edges = 0;
@@ -1034,7 +1034,7 @@ float max_len;
 
     /* create new triangle and add it to the list */
 
-    tri = (Triangle*) myalloc(sizeof(Triangle));
+    tri = (Triangle*) malloc(sizeof(Triangle));
     tri->verts[0] = vt1;
     tri->verts[1] = vt2;
     tri->verts[2] = vt3;

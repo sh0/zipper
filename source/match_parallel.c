@@ -290,7 +290,7 @@ int edges2_okay;
     /* initialize the match list */
 
     if (pos_matches == NULL) {
-        pos_matches = (Match**) myalloc(sizeof(Match*) * global_max_matches);
+        pos_matches = (Match**) malloc(sizeof(Match*) * global_max_matches);
     } else {
         for (i = 0; i < global_num_matches; i++)
             free(pos_matches[i]);
@@ -419,7 +419,7 @@ int edges2_okay;
             pos_matches = (Match**)
                           realloc(pos_matches, sizeof(Match*) * global_max_matches);
         }
-        pos_matches[global_num_matches] = (Match*) myalloc(sizeof(Match));
+        pos_matches[global_num_matches] = (Match*) malloc(sizeof(Match));
 
         /* save the information about this match in the match list */
 

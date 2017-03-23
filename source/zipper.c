@@ -183,8 +183,8 @@ Scan* sc;
     if (!(gs->flags & FLAG_CARTESIAN)) {
 
         /* allocate space for these tables */
-        sc->sin_theta = (float*) myalloc(sizeof(float) * gs->nlg);
-        sc->cos_theta = (float*) myalloc(sizeof(float) * gs->nlg);
+        sc->sin_theta = (float*) malloc(sizeof(float) * gs->nlg);
+        sc->cos_theta = (float*) malloc(sizeof(float) * gs->nlg);
 
         /* compute and store values */
         for (lg = 0; lg < gs->nlg; lg++) {

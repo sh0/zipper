@@ -50,7 +50,7 @@ float size;
 
     /* allocate new hash table */
 
-    table = (Hash_Table*) myalloc(sizeof(Hash_Table));
+    table = (Hash_Table*) malloc(sizeof(Hash_Table));
 
     if (mesh->nverts < TABLE_SIZE1)
         table->num_entries = TABLE_SIZE1;
@@ -59,7 +59,7 @@ float size;
     else
         table->num_entries = TABLE_SIZE3;
 
-    table->verts = (Vertex**) myalloc(sizeof(Vertex*) * table->num_entries);
+    table->verts = (Vertex**) malloc(sizeof(Vertex*) * table->num_entries);
     mesh->table = table;
 
     /* set all table elements to NULL */

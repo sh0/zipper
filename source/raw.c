@@ -66,7 +66,7 @@ char* name;
 
     if (fp == NULL) return NULL;
 
-    rawdata = (RawData*) myalloc(sizeof(RawData));
+    rawdata = (RawData*) malloc(sizeof(RawData));
 
     fread(&nlg, sizeof(int), 1, fp);
     fread(&nlt, sizeof(int), 1, fp);
@@ -80,8 +80,8 @@ char* name;
     printf ("lgincr ltincr: %d %d\n", rawdata->lgincr, rawdata->ltincr);
     */
 
-    rawdata->y = (float*) myalloc(sizeof(float) * nlg * nlt);
-    rawdata->z = (float*) myalloc(sizeof(float) * nlg * nlt);
+    rawdata->y = (float*) malloc(sizeof(float) * nlg * nlt);
+    rawdata->z = (float*) malloc(sizeof(float) * nlg * nlt);
 
     for (i = 0; i < nlg; i++) {
         fread(&rawdata->z[i * nlt], sizeof(float) * nlt, 1, fp);
@@ -160,7 +160,7 @@ RawData* rawdata;
     /* 1 cm tolerance for jumps */
     tolerance = 0.01;
 
-    chew = (unsigned char*) myalloc(sizeof(unsigned char) * nlt * nlg);
+    chew = (unsigned char*) malloc(sizeof(unsigned char) * nlt * nlg);
 
     /* chew back the edge of the range image a number of times */
     for (k = 0; k < global_chew_count; k++) {

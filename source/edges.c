@@ -451,7 +451,7 @@ Vertex* v1, *v2;
 
     /* create edge and place it on edge list of the mesh */
 
-    e = (Edge*) myalloc(sizeof(Edge));
+    e = (Edge*) malloc(sizeof(Edge));
     e->v1 = v1;
     e->v2 = v2;
     e->used = 0;
@@ -463,7 +463,7 @@ Vertex* v1, *v2;
     if (v1->nedges >= v1->max_edges) {
         v1->max_edges += 2;
         if (v1->edges == NULL)
-            v1->edges = (Edge**) myalloc(sizeof(Edge*) * v1->max_edges);
+            v1->edges = (Edge**) malloc(sizeof(Edge*) * v1->max_edges);
         else
             v1->edges = (Edge**)
                         realloc(v1->edges, sizeof(Edge*) * v1->max_edges);
@@ -473,7 +473,7 @@ Vertex* v1, *v2;
     if (v2->nedges >= v2->max_edges) {
         v2->max_edges += 2;
         if (v2->edges == NULL)
-            v2->edges = (Edge**) myalloc(sizeof(Edge*) * v2->max_edges);
+            v2->edges = (Edge**) malloc(sizeof(Edge*) * v2->max_edges);
         else
             v2->edges = (Edge**)
                         realloc(v2->edges, sizeof(Edge*) * v2->max_edges);

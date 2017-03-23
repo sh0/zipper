@@ -139,7 +139,7 @@ char* filename;
 
     /* make one mesh */
 
-    sc->meshes[mesh_level] = (Mesh*) myalloc(sizeof(Mesh));
+    sc->meshes[mesh_level] = (Mesh*) malloc(sizeof(Mesh));
     mesh = sc->meshes[mesh_level];
 
     mesh->ntris = 0;
@@ -154,15 +154,15 @@ char* filename;
 
     mesh->nverts = 0;
     mesh->max_verts = nverts + 100;
-    mesh->verts = (Vertex**) myalloc(sizeof(Vertex*) * mesh->max_verts);
+    mesh->verts = (Vertex**) malloc(sizeof(Vertex*) * mesh->max_verts);
 
     mesh->ntris = 0;
     mesh->max_tris = ntris + 100;
-    mesh->tris = (Triangle**) myalloc(sizeof(Triangle*) * mesh->max_tris);
+    mesh->tris = (Triangle**) malloc(sizeof(Triangle*) * mesh->max_tris);
 
     mesh->nedges = 0;
     mesh->max_edges = 200;
-    mesh->edges = (Edge**) myalloc(sizeof(Edge*) * mesh->max_edges);
+    mesh->edges = (Edge**) malloc(sizeof(Edge*) * mesh->max_edges);
     mesh->edges_valid = 0;
     mesh->eat_list_max = 200;
     mesh->parent_scan = sc;
@@ -416,7 +416,7 @@ char* filename;
 
     /* make one mesh */
 
-    sc->meshes[mesh_level] = (Mesh*) myalloc(sizeof(Mesh));
+    sc->meshes[mesh_level] = (Mesh*) malloc(sizeof(Mesh));
     mesh = sc->meshes[mesh_level];
 
     mesh->ntris = 0;
@@ -479,15 +479,15 @@ char* filename;
 
     mesh->nverts = 0;
     mesh->max_verts = nverts + 100;
-    mesh->verts = (Vertex**) myalloc(sizeof(Vertex*) * mesh->max_verts);
+    mesh->verts = (Vertex**) malloc(sizeof(Vertex*) * mesh->max_verts);
 
     mesh->ntris = 0;
     mesh->max_tris = ntris + 100;
-    mesh->tris = (Triangle**) myalloc(sizeof(Triangle*) * mesh->max_tris);
+    mesh->tris = (Triangle**) malloc(sizeof(Triangle*) * mesh->max_tris);
 
     mesh->nedges = 0;
     mesh->max_edges = 200;
-    mesh->edges = (Edge**) myalloc(sizeof(Edge*) * mesh->max_edges);
+    mesh->edges = (Edge**) malloc(sizeof(Edge*) * mesh->max_edges);
     mesh->edges_valid = 0;
     mesh->eat_list_max = 200;
     mesh->parent_scan = sc;
@@ -582,7 +582,7 @@ Scan* new_scan(char* name, int type)
     int i, j, k;
     Scan* sc;
 
-    scans[nscans] = (Scan*) myalloc(sizeof(Scan));
+    scans[nscans] = (Scan*) malloc(sizeof(Scan));
     sc = scans[nscans];
     nscans++;
 

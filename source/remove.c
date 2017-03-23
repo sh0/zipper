@@ -307,7 +307,7 @@ Scan* scan;
 
     mesh->eat_list_num = 0;
     mesh->eat_list = (Triangle**)
-                     myalloc(sizeof(Triangle*) * mesh->eat_list_max);
+                     malloc(sizeof(Triangle*) * mesh->eat_list_max);
 
     for (i = 0; i < mesh->ntris; i++) {
 
@@ -953,7 +953,7 @@ Scan* sc1, *sc2;
 
             printf("new triangle\n");
 
-            tri = (Triangle*) myalloc(sizeof(Triangle));
+            tri = (Triangle*) malloc(sizeof(Triangle));
             new_tris[new_tri_count++] = tri;
 
             result = find_edge_orientation(e->v1, e->v2);
@@ -1045,7 +1045,7 @@ Scan* sc1, *sc2;
 
             printf("other kind of new triangle\n");
 
-            tri = (Triangle*) myalloc(sizeof(Triangle));
+            tri = (Triangle*) malloc(sizeof(Triangle));
             new_tris[new_tri_count++] = tri;
 
             result = find_edge_orientation(e->v1, e->v2);

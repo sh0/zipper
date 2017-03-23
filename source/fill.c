@@ -142,7 +142,7 @@ Scan* scan;
     }
 
     /* make a list of vertices around the loop */
-    vlist = (Vertex**) myalloc(sizeof(Vertex*) * vcount);
+    vlist = (Vertex**) malloc(sizeof(Vertex*) * vcount);
     index = 0;
     been_around = 0;
     for (e = fedge; e != fedge || !been_around; e = e->prev) {
@@ -534,7 +534,7 @@ init_fill_lists()
     /* either create or clear out the fill vertices */
 
     if (fverts == NULL) {
-        fverts = (FillVertex**) myalloc(sizeof(FillVertex*) * max_fverts);
+        fverts = (FillVertex**) malloc(sizeof(FillVertex*) * max_fverts);
         num_fverts = 0;
     } else {
         for (i = 0; i < num_fverts; i++)
@@ -545,7 +545,7 @@ init_fill_lists()
     /* create or clear out the fill triangles */
 
     if (ftris == NULL) {
-        ftris = (FillTri**) myalloc(sizeof(FillTri*) * max_ftris);
+        ftris = (FillTri**) malloc(sizeof(FillTri*) * max_ftris);
         num_ftris = 0;
     } else {
         for (i = 0; i < num_ftris; i++)
@@ -575,11 +575,11 @@ Triangle* tri;
 
     /* add the new triangle to the list */
 
-    ftri = (FillTri*) myalloc(sizeof(FillTri));
+    ftri = (FillTri*) malloc(sizeof(FillTri));
     ftri->tri = tri;
     ftri->index = num_ftris;
     if (tri->more == NULL)
-        tri->more = (More_Tri_Stuff*) myalloc(sizeof(More_Tri_Stuff));
+        tri->more = (More_Tri_Stuff*) malloc(sizeof(More_Tri_Stuff));
     tri->more->mids[0] = NULL;
     tri->more->mids[1] = NULL;
     tri->more->mids[2] = NULL;
@@ -631,7 +631,7 @@ Vertex* v1, *v2;
 
     /* add the vertex to the list */
 
-    fvert = (FillVertex*) myalloc(sizeof(FillVertex));
+    fvert = (FillVertex*) malloc(sizeof(FillVertex));
     fvert->vert = vert;
     fvert->on_edge = on_edge;
     if (on_edge) {

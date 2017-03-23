@@ -191,7 +191,7 @@ void write_ply(Scan* sc, char* filename, int writeInfo)
 
     mesh = sc->meshes[mesh_level];
 
-    atri.verts = (int*) myalloc(sizeof(int) * 3);
+    atri.verts = (int*) malloc(sizeof(int) * 3);
     atri.nverts = 3;
 
     /* set up the offsets into the Vertex and Triangle structures */
@@ -362,7 +362,7 @@ int read_ply(char* filename)
 
     /* make one mesh */
 
-    sc->meshes[mesh_level] = (Mesh*) myalloc(sizeof(Mesh));
+    sc->meshes[mesh_level] = (Mesh*) malloc(sizeof(Mesh));
     mesh = sc->meshes[mesh_level];
 
     /* read in the vertices */
@@ -370,16 +370,16 @@ int read_ply(char* filename)
     plist = ply_get_element_description(ply, "vertex", &num_elems, &nprops);
     mesh->nverts = 0;
     mesh->max_verts = num_elems + 100;
-    mesh->verts = (Vertex**) myalloc(sizeof(Vertex*) * mesh->max_verts);
+    mesh->verts = (Vertex**) malloc(sizeof(Vertex*) * mesh->max_verts);
 
     plist = ply_get_element_description(ply, "face", &num_elems, &nprops);
     mesh->ntris = 0;
     mesh->max_tris = num_elems + 100;
-    mesh->tris = (Triangle**) myalloc(sizeof(Triangle*) * mesh->max_tris);
+    mesh->tris = (Triangle**) malloc(sizeof(Triangle*) * mesh->max_tris);
 
     mesh->nedges = 0;
     mesh->max_edges = 200;
-    mesh->edges = (Edge**) myalloc(sizeof(Edge*) * mesh->max_edges);
+    mesh->edges = (Edge**) malloc(sizeof(Edge*) * mesh->max_edges);
     mesh->edges_valid = 0;
     mesh->eat_list_max = 200;
     mesh->parent_scan = sc;
@@ -547,7 +547,7 @@ char* name;
     max_std = avg_std * RANGE_DATA_SIGMA_FACTOR;
 
     /* set up the range data structure */
-    plydata = (RangeData*) myalloc(sizeof(RangeData));
+    plydata = (RangeData*) malloc(sizeof(RangeData));
     plydata->nlg = num_rows;
     plydata->nlt = num_cols;
     plydata->has_color = 0;
@@ -574,16 +574,16 @@ char* name;
         return (NULL);
     }
 
-    plydata->points = (Vector*) myalloc(sizeof(Vector) * plydata->num_points);
-    plydata->confidence = (float*) myalloc(sizeof(float) * plydata->num_points);
-    plydata->intensity = (float*) myalloc(sizeof(float) * plydata->num_points);
+    plydata->points = (Vector*) malloc(sizeof(Vector) * plydata->num_points);
+    plydata->confidence = (float*) malloc(sizeof(float) * plydata->num_points);
+    plydata->intensity = (float*) malloc(sizeof(float) * plydata->num_points);
     plydata->red = (unsigned char*)
-                   myalloc(sizeof(unsigned char) * plydata->num_points);
+                   malloc(sizeof(unsigned char) * plydata->num_points);
     plydata->grn = (unsigned char*)
-                   myalloc(sizeof(unsigned char) * plydata->num_points);
+                   malloc(sizeof(unsigned char) * plydata->num_points);
     plydata->blu = (unsigned char*)
-                   myalloc(sizeof(unsigned char) * plydata->num_points);
-    plydata->pnt_indices = (int*) myalloc
+                   malloc(sizeof(unsigned char) * plydata->num_points);
+    plydata->pnt_indices = (int*) malloc
                            (sizeof(int) * plydata->nlt * plydata->nlg);
 
     /* read in the range data */

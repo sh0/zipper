@@ -46,7 +46,7 @@ int nscans = 0;
 /* old zippering? */
 int zipper_old = 0;
 
-int global_dont_draw = 0;
+int global_dont_draw = 1;
 int global_chew_count = 8;
 
 extern int move_num;
@@ -98,14 +98,6 @@ main(argc,argv)
   static int update_continuously = 1;
   int i;
 
-  /* Find out if we should turn off all graphics and Tk */
-  /* Good for scripting.  Not fully implemented, as in some */
-  /* Tcl commands will try to do GL stuff when they shouldn't */
-  for (i = 0; i < argc; i++) {
-      if (strstr(argv[i], "-g") != NULL)
-          global_dont_draw = 1;
-  }
-
 /* for finding out how big things are */
 #if 0
   print_sizes();
@@ -139,10 +131,6 @@ main(argc,argv)
         case 'p':
           sprintf (str, "poly %s", *++argv);
           argc -= 2;
-          break;
-        case 'g':
-          global_dont_draw = 1;
-          argc--;
           break;
         case 'k':
           global_chew_count = atoi (*++argv);

@@ -47,22 +47,3 @@ char* fname;
 
     return (ptr);
 }
-
-
-/******************************************************************************
-Check to see if we can allocate anything.
-******************************************************************************/
-
-alloc_check(str)
-char* str;
-{
-    char* ptr;
-
-    ptr = (char*) malloc(1);
-
-    if (ptr == 0) {
-        fprintf(stderr, "can't allocate at '%s'\n", str);
-    } else
-        free(ptr);
-}
-

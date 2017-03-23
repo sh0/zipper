@@ -33,16 +33,11 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <zipper.h>
 #include "zipglobal.h"
 
-extern Tcl_Interp* interp;
-extern Vertex* find_nearest();
-
 void left_proc();
 void middle_proc();
 void right_proc();
 void quit_proc();
 void refresh_drawing();
-
-
 
 static int poly_draw_flag = 1;  /* draw polygons? */
 static int near_flag = 0;   /* show lines connecting nearby mesh points? */
@@ -65,9 +60,6 @@ int back_grn = 0;
 int back_blu = 0;
 int copied_to_back = 0;         /* has the image been copied to backbuffer? */
 
-float mouse_speed = 1;      /* speed of object motion based on mouse */
-
-
 /* This should be a variable; a function of hardware performance */
 #define MAX_TRIANGLES_FOR_INTERACTION 5000
 
@@ -88,48 +80,6 @@ static Vector* line2 = NULL;
 static unsigned int* line_colors = NULL;
 static int line_num;
 static int line_max;
-
-
-choose_mesh_level()
-{
-    int new_level, best_level;
-    best_level = best_mesh_level();
-    new_level = best_level > mesh_level ? best_level : mesh_level;
-
-    save_mesh_level(new_level);
-}
-
-
-int
-best_mesh_level()
-{
-    int i, j;
-    int num_tris;
-    Scan* sc;
-    Mesh* mesh;
-
-    for (j = 0; j <= 3; j++) {
-        num_tris = 0;
-        for (i = 0; i < nscans; i++) {
-
-            sc = scans[i];
-            mesh = sc->meshes[j];
-
-            if (sc->draw_flag && mesh != NULL) {
-                num_tris += mesh->ntris;
-            } else if (mesh == NULL) {
-                num_tris += 2 * MAX_TRIANGLES_FOR_INTERACTION;
-                break;
-            }
-        }
-        if (num_tris < MAX_TRIANGLES_FOR_INTERACTION)
-            return j;
-    }
-
-    /* Nothing satisfied the criterion */
-    return 3;
-}
-
 
 
 /******************************************************************************
@@ -295,46 +245,6 @@ Vector in_norm, out_norm;
 
 
 /******************************************************************************
-Switch to another level-of-detail for a mesh, but save the old value.
-
-Entry:
-  level - new value of mesh level-of-detail
-******************************************************************************/
-
-save_mesh_level(level)
-int level;
-{
-    pushed_mesh_level = mesh_level;
-
-    /* only switch levels if we are doing progressive refinement */
-    if (refine_flag) {
-        mesh_level = level;
-        partial_flag = 1;
-    }
-
-    drew_partial = 0;
-}
-
-
-/******************************************************************************
-Restore the mesh level-of-detail to the old, saved value.  Re-draw objects
-if we are actually changing the value.
-******************************************************************************/
-
-restore_mesh_level()
-{
-    partial_flag = 0;
-
-    if (mesh_level != pushed_mesh_level) {
-        mesh_level = pushed_mesh_level;
-    } else if (drew_partial) {
-    }
-
-    drew_partial = 0;
-}
-
-
-/******************************************************************************
 Initialize the data structures for "extra" lines to be displayed each frame.
 ******************************************************************************/
 
@@ -389,14 +299,4 @@ unsigned int color;
     vcopy(p2, line2[line_num]);
     line_colors[line_num] = color;
     line_num++;
-}
-
-/******************************************************************************
-Set the flag that says whether or not to draw axes.
-******************************************************************************/
-
-set_axes(val)
-int val;
-{
-    draw_axes = val;
 }

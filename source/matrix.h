@@ -21,10 +21,7 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #ifndef __MATRIX_H__
 #define __MATRIX_H__
 
-#ifndef __GL_GL_H__
 typedef float Matrix[4][4];
-#endif
-
 typedef float Vector[3];
 typedef float Vector4[4];
 typedef float Plane[4];

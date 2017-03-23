@@ -22,7 +22,7 @@ init_resolution_parameters()
     set_eat_near_dist_factor(2.0);
     set_eat_near_cos(-0.5);
     set_eat_start_iters(2);
-    set_eat_start_factor(4.0);    
+    set_eat_start_factor(4.0);
 
     set_clip_near_dist_factor(2.0);
     set_clip_near_cos(0.3);

@@ -32,20 +32,20 @@ Entry:
   fname - file name from which memory was requested
 ******************************************************************************/
 
-char *my_alloc(size,lnum,fname)
-  int size;
-  int lnum;
-  char *fname;
+char* my_alloc(size, lnum, fname)
+int size;
+int lnum;
+char* fname;
 {
-  char *ptr;
+    char* ptr;
 
-  ptr = (char *) malloc (size);
+    ptr = (char*) malloc(size);
 
-  if (ptr == 0) {
-    fprintf(stderr, "Memory allocation bombed on line %d in %s\n", lnum, fname);
-  }
+    if (ptr == 0) {
+        fprintf(stderr, "Memory allocation bombed on line %d in %s\n", lnum, fname);
+    }
 
-  return (ptr);
+    return (ptr);
 }
 
 
@@ -54,16 +54,15 @@ Check to see if we can allocate anything.
 ******************************************************************************/
 
 alloc_check(str)
-  char *str;
+char* str;
 {
-  char *ptr;
+    char* ptr;
 
-  ptr = (char *) malloc (1);
+    ptr = (char*) malloc(1);
 
-  if (ptr == 0) {
-    fprintf (stderr, "can't allocate at '%s'\n", str);
-  }
-  else
-    free (ptr);
+    if (ptr == 0) {
+        fprintf(stderr, "can't allocate at '%s'\n", str);
+    } else
+        free(ptr);
 }
 

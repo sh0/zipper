@@ -37,20 +37,20 @@ Entry:
 ******************************************************************************/
 
 build_rotmat(sc)
-  Scan *sc;
+Scan* sc;
 {
-  int i,j,k;
-  float theta;
+    int i, j, k;
+    float theta;
 
-  for (i = 0; i < 4; i++)
-    for (j = 0; j < 4; j++)
-      sc->rotmat[i][j] = (i == j);
+    for (i = 0; i < 4; i++)
+        for (j = 0; j < 4; j++)
+            sc->rotmat[i][j] = (i == j);
 
-  theta = - sc->rotate * M_PI / 180.0;
+    theta = - sc->rotate * M_PI / 180.0;
 
-  sc->rotmat[X][X] = cos (theta);
-  sc->rotmat[X][Z] = sin (theta);
-  sc->rotmat[Z][X] = -sin (theta);
-  sc->rotmat[Z][Z] = cos (theta);
+    sc->rotmat[X][X] = cos(theta);
+    sc->rotmat[X][Z] = sin(theta);
+    sc->rotmat[Z][X] = -sin(theta);
+    sc->rotmat[Z][Z] = cos(theta);
 }
 

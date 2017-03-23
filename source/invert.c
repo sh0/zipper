@@ -65,51 +65,51 @@ Invert a 4 by 4 matrix.
 Returns the determinant of the matrix.
 ******************************************************************************/
 
-float mat_invert (mat)
+float mat_invert(mat)
 Matrix mat;
 {
-  Double_mat dmat;
-  int a,b;
-  int best;
-  float det = 1.0;
+    Double_mat dmat;
+    int a, b;
+    int best;
+    float det = 1.0;
 
-  invert_to_double (mat, dmat);
+    invert_to_double(mat, dmat);
 
-  /*  convert to upper triangular, with one's on diagonal  */
+    /*  convert to upper triangular, with one's on diagonal  */
 
-  for (a = 0; a < MAT_SIZE; a++) {
+    for (a = 0; a < MAT_SIZE; a++) {
 
-    /* find the row with the largest absolute value in column "a" */
+        /* find the row with the largest absolute value in column "a" */
 
-    best = invert_best_lead (a, dmat);
+        best = invert_best_lead(a, dmat);
 
-    /* if no row has good leading value, the matrix  */
-    /* is not invertible and the determinant is zero */
+        /* if no row has good leading value, the matrix  */
+        /* is not invertible and the determinant is zero */
 
-    if (best == -1)
-      return (0.0);
+        if (best == -1)
+            return (0.0);
 
-    if (best != a)  {
-      invert_switch_rows (a, best, dmat);
-      det = -1.0 * det;
+        if (best != a)  {
+            invert_switch_rows(a, best, dmat);
+            det = -1.0 * det;
+        }
+
+        det = det * dmat [a] [a];
+        invert_multiply_row(a, 1 / dmat [a] [a], dmat);
+
+        for (b = a + 1; b < MAT_SIZE; b++)
+            invert_subtract_rows(a, b, dmat [a] [b], dmat);
     }
 
-    det = det * dmat [a] [a];
-    invert_multiply_row (a, 1 / dmat [a] [a], dmat);
+    /*  now get rid of the upper triangle  */
 
-    for (b = a + 1; b < MAT_SIZE; b++)
-      invert_subtract_rows (a, b, dmat [a] [b], dmat);
-  }
+    for (a = MAT_SIZE - 1; a >= 1; a--)
+        for (b = a - 1; b >= 0; b--)
+            invert_subtract_rows(a, b, dmat [a] [b], dmat);
 
-  /*  now get rid of the upper triangle  */
+    invert_from_double(mat, dmat);
 
-  for (a = MAT_SIZE - 1; a >= 1; a--)
-    for (b = a - 1; b >= 0; b--)
-      invert_subtract_rows (a, b, dmat [a] [b], dmat);
-
-  invert_from_double (mat, dmat);
-
-  return (det);
+    return (det);
 }
 
 
@@ -118,20 +118,20 @@ Place a matrix into the left side of a double matrix and place the identity
 matrix on the right side.
 ******************************************************************************/
 
-invert_to_double (mat,dmat)
+invert_to_double(mat, dmat)
 Matrix mat;
 Double_mat dmat;
 {
-  int i,j;
+    int i, j;
 
-  for (i = 0; i < MAT_SIZE; i ++)
-    for (j = 0; j < MAT_SIZE; j++) {
-      dmat [i] [j] = mat [i] [j];
-      dmat [i + MAT_SIZE] [j] = 0.0;
-    }
+    for (i = 0; i < MAT_SIZE; i ++)
+        for (j = 0; j < MAT_SIZE; j++) {
+            dmat [i] [j] = mat [i] [j];
+            dmat [i + MAT_SIZE] [j] = 0.0;
+        }
 
-  for (j = 0; j < MAT_SIZE; j++)
-    dmat [j + MAT_SIZE] [j] = 1.0;
+    for (j = 0; j < MAT_SIZE; j++)
+        dmat [j + MAT_SIZE] [j] = 1.0;
 }
 
 
@@ -139,15 +139,15 @@ Double_mat dmat;
 Returns the right half of a double matrix.
 ******************************************************************************/
 
-invert_from_double (mat,dmat)
+invert_from_double(mat, dmat)
 Matrix mat;
 Double_mat dmat;
 {
-  int i,j;
+    int i, j;
 
-  for (i = 0; i < MAT_SIZE; i++)
-    for (j = 0; j < MAT_SIZE; j++)
-      mat [i] [j] = dmat [i + MAT_SIZE] [j];
+    for (i = 0; i < MAT_SIZE; i++)
+        for (j = 0; j < MAT_SIZE; j++)
+            mat [i] [j] = dmat [i + MAT_SIZE] [j];
 }
 
 
@@ -155,18 +155,18 @@ Double_mat dmat;
 Switch two rows of a double matrix.
 ******************************************************************************/
 
-invert_switch_rows (row1,row2,dmat)
-int row1,row2;
+invert_switch_rows(row1, row2, dmat)
+int row1, row2;
 Double_mat dmat;
 {
-  int i;
-  float t;
+    int i;
+    float t;
 
-  for (i = 0; i < DOUBLE_SIZE; i++) {
-    t = dmat [i] [row1];
-    dmat [i] [row1] = dmat [i] [row2];
-    dmat [i] [row2] = t;
-  }
+    for (i = 0; i < DOUBLE_SIZE; i++) {
+        t = dmat [i] [row1];
+        dmat [i] [row1] = dmat [i] [row2];
+        dmat [i] [row2] = t;
+    }
 }
 
 
@@ -174,15 +174,15 @@ Double_mat dmat;
 Subtract a multiple of row 1 from row 2.
 ******************************************************************************/
 
-invert_subtract_rows (row1,row2,m,dmat)
-int row1,row2;
+invert_subtract_rows(row1, row2, m, dmat)
+int row1, row2;
 float m;
 Double_mat dmat;
 {
-  int i;
+    int i;
 
-  for (i = 0; i < DOUBLE_SIZE; i++)
-    dmat [i] [row2] = dmat [i] [row2] - m * dmat [i] [row1];
+    for (i = 0; i < DOUBLE_SIZE; i++)
+        dmat [i] [row2] = dmat [i] [row2] - m * dmat [i] [row1];
 }
 
 
@@ -190,15 +190,15 @@ Double_mat dmat;
 Multiply each element of a row by a number.
 ******************************************************************************/
 
-invert_multiply_row (row,m,dmat)
+invert_multiply_row(row, m, dmat)
 int row;
 float m;
 Double_mat dmat;
 {
-  int i;
+    int i;
 
-  for (i = 0; i < DOUBLE_SIZE; i++)
-    dmat [i] [row] = m * dmat [i] [row];
+    for (i = 0; i < DOUBLE_SIZE; i++)
+        dmat [i] [row] = m * dmat [i] [row];
 }
 
 
@@ -214,25 +214,25 @@ Exit:
   returns best row number, or -1 if there is no good row
 ******************************************************************************/
 
-invert_best_lead(row,dmat)
+invert_best_lead(row, dmat)
 int row;
 Double_mat dmat;
 {
-  float max;
-  int j,pos;
+    float max;
+    int j, pos;
 
-  max = -1.0;
+    max = -1.0;
 
-  for (j = row; j < MAT_SIZE; j++)
-    if (fabs (dmat [row] [j]) > max) {
-      max = fabs (dmat [row] [j]);
-      pos = j;
-    }
+    for (j = row; j < MAT_SIZE; j++)
+        if (fabs(dmat [row] [j]) > max) {
+            max = fabs(dmat [row] [j]);
+            pos = j;
+        }
 
-  if (max < BOUND)
-    return (-1);
-  else
-    return (pos);
+    if (max < BOUND)
+        return (-1);
+    else
+        return (pos);
 }
 
 
@@ -240,18 +240,18 @@ Double_mat dmat;
 Print out a double matrix. For debugging purposes.
 ******************************************************************************/
 
-static print_double (dmat)
+static print_double(dmat)
 Double_mat dmat;
 {
-  int i,j;
+    int i, j;
 
-  printf ("\n");
+    printf("\n");
 
-  for (j = 0; j < MAT_SIZE; j++) {
-    for (i = 0; i < DOUBLE_SIZE; i++)
-      printf ("%f  ", dmat [i] [j]);
-    printf ("\n");
-  }
+    for (j = 0; j < MAT_SIZE; j++) {
+        for (i = 0; i < DOUBLE_SIZE; i++)
+            printf("%f  ", dmat [i] [j]);
+        printf("\n");
+    }
 
-  printf ("\n");
+    printf("\n");
 }

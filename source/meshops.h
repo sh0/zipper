@@ -3,6 +3,6 @@
 #ifndef MESHOPTS_H
 #define MESHOPTS_H
 
-Triangle *shared_triangle(int index);
+Triangle* shared_triangle(int index);
 
 #endif

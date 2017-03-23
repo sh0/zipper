@@ -10,6 +10,7 @@ file(GLOB_RECURSE HEADERS RELATIVE ${SOURCE_DIR} *.h)
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}
 )
 
 # Target

@@ -30,8 +30,8 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <stdlib.h>
 #include <event.h>
 #include <matrix.h>
-#include <matrix1.h>
-#include <matrix2.h>
+#include <meschach/matrix.h>
+#include <meschach/matrix2.h>
 #include <myalloc.h>
 
 typedef float Matrix3[3][3];

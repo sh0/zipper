@@ -26,8 +26,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include "zipper.h"
 #include "matrix.h"
-#include "zipglobal.h"
-
 
 typedef struct Cvert {  /* vertex to help find consensus */
     Vector coord;

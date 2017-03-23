@@ -26,7 +26,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include "zipper.h"
 #include "matrix.h"
-#include "zipglobal.h"
 #include "meshops.h"
 
 /* vertex that is part of a hole that is being filled */

@@ -268,4 +268,8 @@ typedef struct Clip_List {
 
 extern Triangle* make_triangle();
 
+// zipglobal
+extern float ZIPPER_RESOLUTION;
+extern int mesh_level;
+
 #endif

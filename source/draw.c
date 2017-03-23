@@ -25,8 +25,7 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <fcntl.h>
 #include <strings.h>
 
-#include <zipper.h>
-#include "zipglobal.h"
+#include "zipper.h"
 
 void left_proc();
 void middle_proc();

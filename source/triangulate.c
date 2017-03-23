@@ -23,9 +23,9 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <matrix.h>
-#include <triangulate.h>
-#include <malloc.h>
+
+#include "matrix.h"
+#include "triangulate.h"
 
 /* screen stuff */
 

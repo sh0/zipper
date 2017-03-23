@@ -23,7 +23,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <stdlib.h>
 
 #include "zipper.h"
-#include "zipglobal.h"
 #include "matrix.h"
 
 /* define either VERBOSE_EDGES or NO_VERBOSE_EDGES */

@@ -26,7 +26,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include "zipper.h"
 #include "matrix.h"
-#include "zipglobal.h"
 
 extern float point_project_line();
 

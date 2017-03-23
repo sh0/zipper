@@ -27,10 +27,8 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <string.h>
 #include <fcntl.h>
 
-#include "strings.h"
 #include "zipper.h"
 #include "raw.h"
-
 
 static int CONF_EDGE_ZERO;
 static float CONF_EDGE_COUNT_FACTOR;

@@ -24,7 +24,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include "zipper.h"
 #include "matrix.h"
-#include "zipglobal.h"
 
 int draw_during_ops = 1;        /* draw during various operations? */
 

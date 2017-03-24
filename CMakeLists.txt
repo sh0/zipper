@@ -23,5 +23,4 @@ set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin")
 set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin")
 
 # Subdirs
-add_subdirectory(meschach)
 add_subdirectory(source)

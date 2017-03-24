@@ -10,7 +10,6 @@ file(GLOB_RECURSE HEADERS RELATIVE ${SOURCE_DIR} *.h)
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}
 )
 
 # Coverage
@@ -30,4 +29,3 @@ set_property(TARGET ${PROGRAM_NAME} PROPERTY C_STANDARD 90)
 
 # Libraries
 target_link_libraries(${PROGRAM_NAME} m)
-target_link_libraries(${PROGRAM_NAME} meschach)

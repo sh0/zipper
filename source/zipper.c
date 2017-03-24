@@ -28,8 +28,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include "zipper.h"
 
-int global_chew_count = 8;
-
 // Globals
 #define SCAN_MAX 200
 Scan* scans[SCAN_MAX];
@@ -38,8 +36,8 @@ float ZIPPER_RESOLUTION = 0.0005; /* The "scale" of the system; formally SPACING
 int mesh_level = 3; /* mesh display level */
 
 // Parameters
-float MAX_EDGE_LENGTH_FACTOR;
-float MAX_EDGE_LENGTH;
+static float MAX_EDGE_LENGTH_FACTOR;
+static float MAX_EDGE_LENGTH;
 
 void update_edge_length_resolution()
 {
@@ -62,7 +60,21 @@ float get_zipper_resolution()
     return ZIPPER_RESOLUTION;
 }
 
-void init_resolution_parameters()
+void set_zipper_resolution(float res)
+{
+    ZIPPER_RESOLUTION = res;
+
+    update_edge_length_resolution();
+    update_fill_resolution();
+    update_eat_resolution();
+    update_clip_resolution();
+    update_consensus_resolution();
+}
+
+/******************************************************************************
+Main routine.
+******************************************************************************/
+static void init_parameters()
 {
     set_max_edge_length_factor(4.0);
 
@@ -87,49 +99,38 @@ void init_resolution_parameters()
     set_consensus_normal_dist_factor(3.0);
     set_consensus_jitter_dist_factor(0.01);
 
-    /* These don't really belong under "resolution", but... */
     set_range_data_sigma_factor(4.0);
     set_range_data_min_intensity(0.05);
     set_range_data_horizontal_erode(1);
 }
 
-void set_zipper_resolution(float res)
-{
-    ZIPPER_RESOLUTION = res;
-
-    update_edge_length_resolution();
-    update_fill_resolution();
-    update_eat_resolution();
-    update_clip_resolution();
-    update_consensus_resolution();
-}
-
-/******************************************************************************
-Main routine.
-******************************************************************************/
 int main(int argc, char* argv[])
 {
-    init_resolution_parameters();
+    // Setup
+    init_parameters();
 
+    // Help
     if (argc < 4) {
-        printf("Usage: zipper src1.ply src2.ply dst1.ply dst2.ply\n");
+        printf("Usage: zipper src1.ply src2.ply dst.ply\n");
         return 0;
     }
 
+    // Read input
     if (read_ply(argv[1]) != 0) {
-        printf("Failed to read input 1: %s", argv[1]);
+        printf("Failed to read input 1: %s\n", argv[1]);
         return 1;
     }
     if (read_ply(argv[2]) != 0) {
-        printf("Failed to read input 2: %s", argv[2]);
+        printf("Failed to read input 2: %s\n", argv[2]);
         return 1;
     }
 
+    // Process
     do_it_all();
     //clip_triangles(scans[0], scans[1]);
 
+    // Write output
     write_ply(scans[0], argv[3], 1);
-    write_ply(scans[1], argv[4], 1);
 }
 
 /******************************************************************************

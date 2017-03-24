@@ -1795,31 +1795,27 @@ Exit:
   imat - inverse transformation
   returns 1 if we've got bad plane equation, 0 if everything is okay
 ******************************************************************************/
-
 int face_to_xy_plane(a, b, c, d, mat, imat)
 float a, b, c, d;
 Matrix mat, imat;
 {
-    int i;
+    int i, j;
     float dx, dy, dz;
     Vector v1, v2, v3;
     Matrix t;
+    Vector tv;
 
     /* translational component of matrix */
-
     dx = a * d;
     dy = b * d;
     dz = c * d;
 
-    /* rotational component can be any orthonormal matrix */
-    /* where this is the third column */
-
+    /* rotational component can be any orthonormal matrix where this is the third column */
     v3[X] = a;
     v3[Y] = b;
     v3[Z] = c;
 
     /* make a second vector that's not a multiple of v3 */
-
     vcopy(v3, v2);
 
     if (v2[X] != 0)
@@ -1835,14 +1831,12 @@ Matrix mat, imat;
     }
 
     /* do a few cross products to make the vectors orthonormal */
-
     vcross(v2, v3, v1);
     vnorm(v1);
     vcross(v3, v1, v2);
     vnorm(v2);
 
     /* make a matrix out of the vectors */
-
     mat_ident(mat);
     for (i = 0; i < 3; i++) {
         mat[i][0] = v1[i];
@@ -1850,22 +1844,34 @@ Matrix mat, imat;
         mat[i][2] = v3[i];
     }
 
-    /* now create the matrix that does the trick */
-
+    /* reverse transformation */
     mat_translate(t, dx, dy, dz);
     mat_mult(mat, mat, t);
-    mat_copy(imat, mat);
-    mat_invert(imat);
+    #if 1
+        mat_ident(imat);
+        for (i = 0; i < 3; i++) {
+            for (j = 0; j < 3; j++)
+                imat[i][j] = mat[j][i];
+        }
+        tv[0] = mat[3][0];
+        tv[1] = mat[3][1];
+        tv[2] = mat[3][1];
+        mat_apply(imat, tv);
+        imat[3][0] = -tv[0];
+        imat[3][1] = -tv[1];
+        imat[3][2] = -tv[2];
+    #else
+        mat_copy(imat, mat);
+        mat_invert(imat);
+    #endif
 
     return (0);
 }
-
 
 /******************************************************************************
 Re-order the edges by down-weighting edges that are nearly parallel to the
 boundary.
 ******************************************************************************/
-
 reorder_edges()
 {
     int i, j;

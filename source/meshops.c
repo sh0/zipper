@@ -27,7 +27,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include "zipper.h"
 #include "matrix.h"
-#include "vect.h"
 #include "meshops.h"
 
 typedef enum {FALSE = 0, TRUE} boolean;

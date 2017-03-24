@@ -18,8 +18,10 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 */
 
-#ifndef __MATRIX_H__
-#define __MATRIX_H__
+#ifndef ZIPPER_MATRIX_H
+#define ZIPPER_MATRIX_H
+
+#include <math.h>
 
 typedef float Matrix[4][4];
 typedef float Vector[3];
@@ -32,11 +34,27 @@ typedef float Quaternion[4];
 #define Z 2
 #define W 3
 
-extern float vnorm();
-extern float vdot();
-extern float vlen();
-extern void vset(float*, float, float, float);
-extern void vscale(float*, float);
+// Old vector operations
+void vcopy(const float*, float*);
+void vset(float*, float, float, float);
+float vlength(const float*);
+void vscale(float*, float);
+void vadd(const float*, const float*, float*);
+void vsub(const float*, const float*, float*);
+float vdot(const float*, const float*);
+void vcross(const float*, const float*, float*);
 
-#endif /* __MATRIX_H__ */
+// Vector operations
+float vnorm(Vector v);
+float vlen(Vector a);
+void vapply(Matrix m, Vector a, Vector b);
+void vsub2(Vector a, Vector b, Vector c);
 
+// Matrix operations
+void mat_apply(Matrix m, Vector v);
+void mat_ident(Matrix m);
+void mat_translate(Matrix m, float x, float y, float z);
+void mat_mult(Matrix prod, Matrix a, Matrix b);
+void mat_copy(Matrix dest, Matrix source);
+
+#endif

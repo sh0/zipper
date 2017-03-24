@@ -28,9 +28,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include "raw.h"
 
 
-extern int global_chew_count;
-
-
 /******************************************************************************
 Read geometry from a raw file.
 
@@ -89,12 +86,6 @@ char* name;
 
     fclose(fp);
 
-#if 0
-    /* maybe chew back the edges of a mesh */
-    if (global_chew_count)
-        chew_raw_edges(rawdata);
-#endif
-
     return (rawdata);
 }
 
@@ -135,76 +126,3 @@ Vector vec;
 
     return (0);
 }
-
-
-/******************************************************************************
-Chew back the edges of a raw range image.
-******************************************************************************/
-
-chew_raw_edges(rawdata)
-RawData* rawdata;
-{
-    int i, k;
-    int lt, lg;
-    int nlt, nlg;
-    unsigned char* chew;
-    float z, nz;
-    float tolerance;
-    int index;
-    int count;
-
-    nlt = rawdata->nlt;
-    nlg = rawdata->nlg;
-
-    /* 1 cm tolerance for jumps */
-    tolerance = 0.01;
-
-    chew = (unsigned char*) malloc(sizeof(unsigned char) * nlt * nlg);
-
-    /* chew back the edge of the range image a number of times */
-    for (k = 0; k < global_chew_count; k++) {
-
-        count = 0;
-
-        /* zero out the chew flags */
-        for (i = 0; i < nlt * nlg; i++)
-            chew[i] = 0;
-
-        /* find where to chew */
-
-        for (lt = 1; lt < nlt - 1; lt++)
-            for (lg = 1; lg < nlg - 1; lg++) {
-
-                index = lg * nlt + lt;
-                z = rawdata->y[index];
-
-                if (IS_REALVOID(z))
-                    continue;
-
-                nz = rawdata->y[index + 1];
-                if (z - nz > tolerance) chew[index] = 1;
-                nz = rawdata->y[index - 1];
-                if (z - nz > tolerance) chew[index] = 1;
-                nz = rawdata->y[index + nlt];
-                if (z - nz > tolerance) chew[index] = 1;
-                nz = rawdata->y[index - nlt];
-                if (z - nz > tolerance) chew[index] = 1;
-            }
-
-        /* make those chewed places into void places */
-        for (lt = 1; lt < nlt - 1; lt++)
-            for (lg = 1; lg < nlg - 1; lg++) {
-                index = lg * nlt + lt;
-                if (chew[index]) {
-                    rawdata->y[index] = REALVOID;
-                    count++;
-                }
-            }
-
-        printf("%d chewed\n", count);
-
-    }
-
-    free(chew);
-}
-

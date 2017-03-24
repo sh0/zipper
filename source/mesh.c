@@ -990,9 +990,9 @@ Triangle* make_triangle(Mesh* mesh, Vertex* vt1, Vertex* vt2, Vertex* vt3, float
     Vector cross;
 
     /* check edge lengths of triangle */
-    vsub(vt3, vt1, v1);
-    vsub(vt2, vt1, v2);
-    vsub(vt3, vt2, v3);
+    vsub(vt3->coord, vt1->coord, v1);
+    vsub(vt2->coord, vt1->coord, v2);
+    vsub(vt3->coord, vt2->coord, v3);
     /* return if any edge is too long */
     if (vlen(v1) > max_len || vlen(v2) > max_len || vlen(v3) > max_len)
         return (NULL);

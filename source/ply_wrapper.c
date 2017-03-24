@@ -868,8 +868,7 @@ int xx, yy;
         if (next_vert_index == -1)
             return RIGHT_EDGE;
         else {
-            my_vsub(plydata->points[vert_index],
-                    plydata->points[next_vert_index], diff);
+            vsub2(plydata->points[vert_index], plydata->points[next_vert_index], diff);
             if (vlen(diff) > edge_length_max(0)) {
                 if (diff[Z] > 0)
                     return JUMP_FARTHER;

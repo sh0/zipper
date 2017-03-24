@@ -237,5 +237,6 @@ void update_edge_length_resolution();
 void set_max_edge_length_factor(float factor);
 float get_max_edge_length_factor();
 float get_zipper_resolution();
+void set_zipper_resolution(float res);
 
 #endif

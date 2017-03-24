@@ -187,9 +187,7 @@ PlyFile* ply_open_for_writing(
     float* version
 )
 {
-    int i;
     PlyFile* plyfile;
-    PlyElement* elem;
     char* name;
     FILE* fp;
 
@@ -389,9 +387,7 @@ void ply_element_count(
     int nelems
 )
 {
-    int i;
     PlyElement* elem;
-    PlyProperty* prop;
 
     /* look for appropriate element */
     elem = find_element(plyfile, elem_name);
@@ -510,7 +506,7 @@ Entry:
 
 void ply_put_element(PlyFile* plyfile, void* elem_ptr)
 {
-    int i, j, k;
+    int j, k;
     FILE* fp = plyfile->fp;
     PlyElement* elem;
     PlyProperty* prop;
@@ -686,7 +682,6 @@ PlyFile* ply_read(FILE* fp, int* nelems, char** *elem_names)
     PlyFile* plyfile;
     int nwords;
     char** words;
-    int found_format = 0;
     char** elist;
     PlyElement* elem;
     char* orig_line;
@@ -728,7 +723,6 @@ PlyFile* ply_read(FILE* fp, int* nelems, char** *elem_names)
             else
                 return (NULL);
             plyfile->version = atof(words[2]);
-            found_format = 1;
         } else if (equal_strings(words[0], "element"))
             add_element(plyfile, words, nwords);
         else if (equal_strings(words[0], "property"))
@@ -1204,7 +1198,6 @@ PlyOtherElems* ply_get_other_element(
     PlyElement* elem;
     PlyOtherElems* other_elems;
     OtherElem* other;
-    int num_elems;
 
     /* look for appropriate element */
     elem = find_element(plyfile, elem_name);
@@ -1385,8 +1378,6 @@ Compare two strings.  Returns 1 if they are the same, 0 if not.
 
 int equal_strings(char* s1, char* s2)
 {
-    int i;
-
     while (*s1 && *s2)
         if (*s1++ != *s2++)
             return (0);
@@ -1458,13 +1449,12 @@ Entry:
 
 void ascii_get_element(PlyFile* plyfile, char* elem_ptr)
 {
-    int i, j, k;
+    int j, k;
     PlyElement* elem;
     PlyProperty* prop;
     char** words;
     int nwords;
     int which_word;
-    FILE* fp = plyfile->fp;
     char* elem_data, *item;
     char* item_ptr;
     int item_size;
@@ -1577,7 +1567,7 @@ Entry:
 
 void binary_get_element(PlyFile* plyfile, char* elem_ptr)
 {
-    int i, j, k;
+    int j, k;
     PlyElement* elem;
     PlyProperty* prop;
     FILE* fp = plyfile->fp;
@@ -1718,7 +1708,6 @@ Exit:
 char** get_words(FILE* fp, int* nwords, char** orig_line)
 {
 #define BIG_STRING 4096
-    int i, j;
     static char str[BIG_STRING];
     static char str_copy[BIG_STRING];
     char** words;
@@ -2374,8 +2363,6 @@ Entry:
 
 void add_property(PlyFile* plyfile, char** words, int nwords)
 {
-    int prop_type;
-    int count_type;
     PlyProperty* prop;
     PlyElement* elem;
 

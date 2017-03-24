@@ -48,58 +48,59 @@ static float ALIGN_NEAR_DIST_FACTOR;
 static float ALIGN_NEAR_DIST;
 static float ALIGN_NEAR_COS;
 
+void match_proc();
+void new_iterative_match(Scan** move_list, Scan** match_to, Scan** drag_with, int nmove, int nmatch, int ndrag);
+void iterative_match(Scan* sc1, Scan* sc2, Scan* drag_with[], int ndrag);
+int compare_matches(Match* m1, Match* m2);
+void create_match_list(Scan* sc1, Scan* sc2, int edges1_okay, int edges2_okay);
+void single_create_match_list(Scan* sc1, Scan* sc2, int edges1_okay, int edges2_okay);
+void one_match(Scan* sc1, Scan* sc2, Vector move_dir, int* n_matches, float* dist_sum);
+Scan* find_scan(char* name);
+Scan* rename_scan(char* old_name, char* new_name);
+void read_matches(char* filename);
+void all_conform();
+void mesh_conform(Scan* sc1, Scan* sc2);
 
-update_align_resolution()
+void update_align_resolution()
 {
     ALIGN_NEAR_DIST = ZIPPER_RESOLUTION * ALIGN_NEAR_DIST_FACTOR;
 }
 
-
-set_align_near_dist_factor(factor)
-float factor;
+void set_align_near_dist_factor(float factor)
 {
     ALIGN_NEAR_DIST_FACTOR = factor;
     ALIGN_NEAR_DIST = ZIPPER_RESOLUTION * ALIGN_NEAR_DIST_FACTOR;
 }
 
-
-float
-get_align_near_dist_factor()
+float get_align_near_dist_factor()
 {
     return ALIGN_NEAR_DIST_FACTOR;
 }
 
-
-set_align_near_cos(cosine)
-float cosine;
+void set_align_near_cos(float cosine)
 {
     ALIGN_NEAR_COS = cosine;
 }
 
-
-float
-get_align_near_cos()
+float get_align_near_cos()
 {
     return ALIGN_NEAR_COS;
 }
 
-
-
 /******************************************************************************
 Match together multiple meshes.
 ******************************************************************************/
-
-match_proc()
+void match_proc()
 {
     int i;
-
     if (num_matches == 0) {
         new_iterative_match(&scans[0], &scans[1], NULL, 1, 1, 0);
-    } else
+    } else {
         for (i = 0; i < num_matches; i++) {
             new_iterative_match(&match_from[i], &match_to[i], match_drag[i],
                                 1, 1, num_drag[i]);
         }
+    }
 }
 
 
@@ -115,18 +116,10 @@ Entry:
   nmatch    - number of scans to match
   ndrag     - number in drag list
 ******************************************************************************/
-
-new_iterative_match(move_list, match_to, drag_with, nmove, nmatch, ndrag)
-Scan** move_list;
-Scan** match_to;
-Scan** drag_with;
-int nmove;
-int nmatch;
-int ndrag;
+void new_iterative_match(Scan** move_list, Scan** match_to, Scan** drag_with, int nmove, int nmatch, int ndrag)
 {
     int i, j;
     float dist_sum;
-    float old_sum;
     Vector move_dir;
     Vector old_dir;
     float fact = 1.0;
@@ -136,7 +129,6 @@ int ndrag;
     sc1 = move_list[0];
     sc2 = match_to[0];
 
-    old_sum = 1e20;
     old_dir[X] = old_dir[Y] = old_dir[Z] = 0;
 
     for (i = 0; i < 10; i++) {
@@ -178,7 +170,6 @@ int ndrag;
     }
 }
 
-
 /******************************************************************************
 Try to match two meshes by iteratively moving them small distances.
 
@@ -188,22 +179,16 @@ Entry:
   drag_with - list of other scans to move along with sc1
   ndrag     - number in drag list
 ******************************************************************************/
-
-iterative_match(sc1, sc2, drag_with, ndrag)
-Scan* sc1, *sc2;
-Scan* drag_with[];
-int ndrag;
+void iterative_match(Scan* sc1, Scan* sc2, Scan* drag_with[], int ndrag)
 {
     int i, j;
     float dist_sum;
-    float old_sum;
     Vector move_dir;
     Vector old_dir;
     float fact = 0.01;
     float dot;
     int count;
 
-    old_sum = 1e20;
     old_dir[X] = old_dir[Y] = old_dir[Z] = 0;
 
     for (i = 0; i < 20; i++) {
@@ -243,7 +228,6 @@ int ndrag;
     }
 }
 
-
 /******************************************************************************
 Compare the lengths of two match entries.
 
@@ -253,9 +237,7 @@ Entry:
 Exit:
   returns 0 if lengths are same, +1 or -1 if they are different (for sorting)
 ******************************************************************************/
-
-int compare_matches(m1, m2)
-Match* m1, *m2;
+int compare_matches(Match* m1, Match* m2)
 {
     if (m1->len < m2->len)
         return (1);
@@ -264,7 +246,6 @@ Match* m1, *m2;
     else
         return (0);
 }
-
 
 /******************************************************************************
 Make a list of matches between vertices of one mesh and positions on a
@@ -276,11 +257,7 @@ Entry:
   edges1_okay - if it is okay to return matches that are on an edge of mesh 1
   edges2_okay - return matches on mesh 2 edges?
 ******************************************************************************/
-
-create_match_list(sc1, sc2, edges1_okay, edges2_okay)
-Scan* sc1, *sc2;
-int edges1_okay;
-int edges2_okay;
+void create_match_list(Scan* sc1, Scan* sc2, int edges1_okay, int edges2_okay)
 {
     int i;
     void single_create_match_list();
@@ -296,17 +273,7 @@ int edges2_okay;
 
     global_num_matches = 0;
 
-    /* fork off several processes to make the list */
-
-    //#define  PARALLEL  1
-
-#ifdef PARALLEL
-    m_set_procs(parallel_procs_max);
-    m_fork(single_create_match_list, sc1, sc2, edges1_okay, edges2_okay);
-    processes_forked = 1;
-#else
     single_create_match_list(sc1, sc2, edges1_okay, edges2_okay);
-#endif
 
     /*
     printf ("global_num_matches = %d\n", global_num_matches);
@@ -328,7 +295,6 @@ int edges2_okay;
 #endif
 }
 
-
 /******************************************************************************
 Make a list of matches between vertices of one mesh and positions on a
 second mesh.  Do this only for a sub-range of the points in the mesh.
@@ -339,11 +305,7 @@ Entry:
   edges1_okay - if it is okay to return matches that are on an edge of mesh 1
   edges2_okay - return matches on mesh 2 edges?
 ******************************************************************************/
-
-void single_create_match_list(sc1, sc2, edges1_okay, edges2_okay)
-Scan* sc1, *sc2;
-int edges1_okay;
-int edges2_okay;
+void single_create_match_list(Scan* sc1, Scan* sc2, int edges1_okay, int edges2_okay)
 {
     int i;
     int start, end;
@@ -355,8 +317,6 @@ int edges2_okay;
     float len;
     NearPosition near_info;
     int inc;
-    int processes;
-    int myid;
 
     m1 = sc1->meshes[mesh_level];
     m2 = sc2->meshes[mesh_level];
@@ -366,20 +326,8 @@ int edges2_okay;
     }
 
     /* find the nearest points on mesh #2 to points on mesh #1 */
-
-#ifdef PARALLEL
-    myid = m_get_myid();
-    processes = m_get_numprocs();
-    start = m1->nverts * (myid / (float) processes);
-    end   = m1->nverts * ((myid + 1) / (float) processes) - 1;
-#else
     start = 0;
     end   = m1->nverts - 1;
-#endif
-
-#if 0
-    printf("id start end num: %d %d %d %d\n", myid, start, end, m1->nverts);
-#endif
 
     for (i = start; i <= end; i++) {
 
@@ -407,10 +355,6 @@ int edges2_okay;
         if (!edges2_okay && near_info.on_edge)
             continue;
 
-#ifdef PARALLEL
-        m_lock();
-#endif
-
         /* make sure there is room in the match list */
         if (global_num_matches >= global_max_matches) {
             global_max_matches *= 2;
@@ -420,24 +364,16 @@ int edges2_okay;
         pos_matches[global_num_matches] = (Match*) malloc(sizeof(Match));
 
         /* save the information about this match in the match list */
-
         vsub(near_pos, pos, diff);
         len = vlen(diff);
         pos_matches[global_num_matches]->len = len;
         vcopy(diff, pos_matches[global_num_matches]->dir);
         vcopy(pos, pos_matches[global_num_matches]->pos);
         pos_matches[global_num_matches]->vert = m1->verts[i];
-        pos_matches[global_num_matches]->confidence = near_info.confidence *
-                m1->verts[i]->confidence;
+        pos_matches[global_num_matches]->confidence = near_info.confidence * m1->verts[i]->confidence;
         global_num_matches++;
-
-#ifdef PARALLEL
-        m_unlock();
-#endif
-
     }
 }
-
 
 /******************************************************************************
 Try to match two meshes.
@@ -450,12 +386,7 @@ Exit:
   n_matches - number of matches between meshes
   dist_sum    - sum of distances between corresponding points on mesh
 ******************************************************************************/
-
-one_match(sc1, sc2, move_dir, n_matches, dist_sum)
-Scan* sc1, *sc2;
-Vector move_dir;
-int* n_matches;
-float* dist_sum;
+void one_match(Scan* sc1, Scan* sc2, Vector move_dir, int* n_matches, float* dist_sum)
 {
     int i;
     int match_count = 0;
@@ -481,7 +412,6 @@ float* dist_sum;
     *n_matches = match_count;
 }
 
-
 /******************************************************************************
 Returns pointer to scan, given a name.
 
@@ -491,9 +421,7 @@ Entry:
 Exit:
   returns pointer to scan, or NULL if it can't be found
 ******************************************************************************/
-
-Scan* find_scan(name)
-char* name;
+Scan* find_scan(char* name)
 {
     int i;
 
@@ -504,7 +432,6 @@ char* name;
     return (NULL);
 }
 
-
 /******************************************************************************
 Returns pointer to scan, given a name.
 
@@ -514,9 +441,7 @@ Entry:
 Exit:
   returns pointer to scan, or NULL if it can't be found
 ******************************************************************************/
-
-Scan* rename_scan(old_name, new_name)
-char* old_name, *new_name;
+Scan* rename_scan(char* old_name, char* new_name)
 {
     int i;
 
@@ -530,16 +455,13 @@ char* old_name, *new_name;
     return (NULL);
 }
 
-
 /******************************************************************************
 Reads file telling how to match up different scans.
 
 Entry:
   filename - name of file to read from
 ******************************************************************************/
-
-read_matches(filename)
-char* filename;
+void read_matches(char* filename)
 {
     int i, j, k;
     FILE* fp;
@@ -625,11 +547,9 @@ char* filename;
     fclose(fp);
 }
 
-
 /******************************************************************************
 Cause all meshes to conform to those meshes they are matched to.
 ******************************************************************************/
-
 void all_conform()
 {
     int i;
@@ -641,7 +561,6 @@ void all_conform()
             mesh_conform(match_from[i], match_to[i]);
 }
 
-
 /******************************************************************************
 Cause the vertices of one mesh to lie on the surface of another.
 
@@ -649,16 +568,13 @@ Entry:
   sc1 - one of the meshes
   sc2 - the other mesh
 ******************************************************************************/
-
-mesh_conform(sc1, sc2)
-Scan* sc1, *sc2;
+void mesh_conform(Scan* sc1, Scan* sc2)
 {
     int i;
-    Mesh* m1, *m2;
+    Mesh* m1;
     Vertex* vert;
 
     m1 = sc1->meshes[mesh_level];
-    m2 = sc2->meshes[mesh_level];
 
     /* create list of matches between vertices of sc1 to positions on sc2 */
     create_match_list(sc1, sc2, 1, 0);
@@ -672,4 +588,3 @@ Scan* sc1, *sc2;
     /* re-compute surface normals for the mesh */
     find_vertex_normals(m1);
 }
-

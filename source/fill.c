@@ -29,7 +29,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include "meshops.h"
 
 /* vertex that is part of a hole that is being filled */
-
 typedef struct FillVertex {
     Vertex* vert;         /* vertex helping cover the hole */
     unsigned char on_edge;    /* on the edge of the hole? */
@@ -37,7 +36,6 @@ typedef struct FillVertex {
 } FillVertex;
 
 /* triangle used to fill a hole */
-
 typedef struct FillTri {
     Triangle* tri;        /* triangle used to fill hole */
     int index;            /* index into list containing triangle */
@@ -51,31 +49,37 @@ static FillTri** ftris = NULL;
 static int num_ftris = 0;
 static int max_ftris = 50;
 
-
 static float FILL_EDGE_LENGTH_FACTOR;
 static float FILL_EDGE_LENGTH;
 
+void better_fill_loop(int loop, Scan* scan);
+int fix_fill_size(int loop, Scan* scan, float max_len, float* size);
+int maybe_split_edge(Triangle* tri, Scan* scan, int idx1, int idx2);
+void init_fill_lists();
+void new_ftri(Triangle* tri);
+void delete_ftri(FillTri* ftri);
+void new_fvert(Vertex* vert, int on_edge, Vertex* v1, Vertex* v2);
+void fill_tri_split2(FillTri* ftri, Mesh* mesh, int index);
+void fill_tri_split3(FillTri* ftri, Mesh* mesh, int index);
+void fill_tri_split4(FillTri* ftri, Mesh* mesh, int index);
+void smooth_hole_vertices(Scan* scan);
+void swap_hole_edges(Scan* sc);
 
-update_fill_resolution()
+void update_fill_resolution()
 {
     FILL_EDGE_LENGTH = ZIPPER_RESOLUTION * FILL_EDGE_LENGTH_FACTOR;
 }
 
-
-set_fill_edge_length_factor(factor)
-float factor;
+void set_fill_edge_length_factor(float factor)
 {
     FILL_EDGE_LENGTH_FACTOR = factor;
     FILL_EDGE_LENGTH = ZIPPER_RESOLUTION * FILL_EDGE_LENGTH_FACTOR;
 }
 
-
-float
-get_fill_edge_length_factor()
+float get_fill_edge_length_factor()
 {
     return FILL_EDGE_LENGTH_FACTOR;
 }
-
 
 /******************************************************************************
 Fill in a loop of a mesh.
@@ -84,10 +88,7 @@ Entry:
   loop - index of loop to fill
   scan - scan containing loop
 ******************************************************************************/
-
-better_fill_loop(loop, scan)
-int loop;
-Scan* scan;
+void better_fill_loop(int loop, Scan* scan)
 {
     int i;
     Mesh* mesh;
@@ -273,7 +274,6 @@ Scan* scan;
     printf("done filling hole\n");
 }
 
-
 /******************************************************************************
 Make sure that the triangles that fill a hole are no larger than a particular
 maximum size.
@@ -287,12 +287,7 @@ Exit:
   size - size of largest edge
   returns number of new vertices created
 ******************************************************************************/
-
-int fix_fill_size(loop, scan, max_len, size)
-int loop;
-Scan* scan;
-float max_len;
-float* size;
+int fix_fill_size(int loop, Scan* scan, float max_len, float* size)
 {
     int i, j;
     Triangle* tri;
@@ -304,27 +299,20 @@ float* size;
     int code;
     Mesh* mesh = scan->meshes[mesh_level];
     FillTri* ftri;
-    char str[80];
     int num_created = 0;
     float max_size = -1e20;
 
-    init_extra_lines();
-
     /* check the size of all the triangles filling the hole */
-
     for (i = 0; i < num_ftris; i++) {
-
         ftri = ftris[i];
         tri = ftris[i]->tri;
 
         /* get pointers to the fill vertices of this triangle */
-
         verts[0] = (FillVertex*) tri->verts[0]->move_to;
         verts[1] = (FillVertex*) tri->verts[1]->move_to;
         verts[2] = (FillVertex*) tri->verts[2]->move_to;
 
         /* examine each edge of the triangle to see if it should be split */
-
         for (j = 0; j < 3; j++) {
 
             /* find length of edge */
@@ -349,7 +337,6 @@ float* size;
     }
 
     /* check each triangle and see if it needs to be split */
-
     for (i = num_ftris - 1; i >= 0; i--) {
 
         ftri = ftris[i];
@@ -405,11 +392,7 @@ Entry:
 Exit:
   returns 1 if it split the edge, 0 if not
 ******************************************************************************/
-
-int maybe_split_edge(tri, scan, idx1, idx2)
-Triangle* tri;
-Scan* scan;
-int idx1, idx2;
+int maybe_split_edge(Triangle* tri, Scan* scan, int idx1, int idx2)
 {
     int shared;
     Vertex* v1, *v2;
@@ -507,27 +490,16 @@ int idx1, idx2;
     /* add the vertex to the list of hole-filling vertices */
     new_fvert(new_vert, 0, NULL, NULL);
 
-#if 1
-    /* draw a point here at the new midpoint */
-    mesh_to_world(scan, pos, pos);
-    if (shared == 1)
-        add_extra_line(pos, pos, 0x0000ff);
-    else
-        add_extra_line(pos, pos, 0x00ff00);
-#endif
-
     /* signal that we created a new vertex */
     return (1);
 }
 
-
 /******************************************************************************
 Initialize the lists of fill vertices and triangles.
 ******************************************************************************/
-
-init_fill_lists()
+void init_fill_lists()
 {
-    int i, j;
+    int i;
 
     /* either create or clear out the fill vertices */
 
@@ -552,16 +524,13 @@ init_fill_lists()
     }
 }
 
-
 /******************************************************************************
 Add a new triangle to the list of fill triangles.
 
 Entry:
   tri      - pointer to new triangle to add to list
 ******************************************************************************/
-
-new_ftri(tri)
-Triangle* tri;
+void new_ftri(Triangle* tri)
 {
     FillTri* ftri;
 
@@ -587,13 +556,10 @@ Triangle* tri;
     num_ftris++;
 }
 
-
 /******************************************************************************
 Delete a triangle being used to fill a hole.
 ******************************************************************************/
-
-delete_ftri(ftri)
-FillTri* ftri;
+void delete_ftri(FillTri* ftri)
 {
     if (ftri->tri->more)
         free(ftri->tri->more);
@@ -603,7 +569,6 @@ FillTri* ftri;
     free(ftri);
 }
 
-
 /******************************************************************************
 Add a vertex to the list of vertices that help fill a hole.
 
@@ -612,11 +577,7 @@ Entry:
   on_edge - is this vertex on the hole's boundary?
   v1,v2   - adjacent vertices on hole's boundary, if on_edge is 1
 ******************************************************************************/
-
-new_fvert(vert, on_edge, v1, v2)
-Vertex* vert;
-int on_edge;
-Vertex* v1, *v2;
+void new_fvert(Vertex* vert, int on_edge, Vertex* v1, Vertex* v2)
 {
     FillVertex* fvert;
 
@@ -647,7 +608,6 @@ Vertex* v1, *v2;
     vert->move_to = (Vertex*) fvert;
 }
 
-
 /******************************************************************************
 Split a hole-filling triangle into two triangles.
 
@@ -656,11 +616,7 @@ Entry:
   mesh  - mesh tri comes from
   index - index of midpoint to use to split with
 ******************************************************************************/
-
-fill_tri_split2(ftri, mesh, index)
-FillTri* ftri;
-Mesh* mesh;
-int index;
+void fill_tri_split2(FillTri* ftri, Mesh* mesh, int index)
 {
     Vertex* v1, *v2, *v3;
     Vertex* m1;
@@ -690,7 +646,6 @@ int index;
     new_ftri(new_tri);
 }
 
-
 /******************************************************************************
 Split a hole-filling triangle into three triangles.
 
@@ -699,11 +654,7 @@ Entry:
   mesh  - mesh tri comes from
   index - index of midpoint to use to split with
 ******************************************************************************/
-
-fill_tri_split3(ftri, mesh, index)
-FillTri* ftri;
-Mesh* mesh;
-int index;
+void fill_tri_split3(FillTri* ftri, Mesh* mesh, int index)
 {
     Vertex* v1, *v2, *v3;
     Vertex* m1, *m2;
@@ -738,7 +689,6 @@ int index;
     new_ftri(new_tri);
 }
 
-
 /******************************************************************************
 Split a hole-filling triangle into four triangles.
 
@@ -747,11 +697,7 @@ Entry:
   mesh  - mesh tri comes from
   index - index of midpoint to use to split with
 ******************************************************************************/
-
-fill_tri_split4(ftri, mesh, index)
-FillTri* ftri;
-Mesh* mesh;
-int index;
+void fill_tri_split4(FillTri* ftri, Mesh* mesh, int index)
 {
     Vertex* v1, *v2, *v3;
     Vertex* m1, *m2, *m3;
@@ -790,19 +736,15 @@ int index;
     new_ftri(new_tri);
 }
 
-
 /******************************************************************************
 Use Laplacian smoothing to put the vertices of a hole in better positions.
 
 Entry:
   scan - scan that has a hole that is being filled
 ******************************************************************************/
-
-smooth_hole_vertices(scan)
-Scan* scan;
+void smooth_hole_vertices(Scan* scan)
 {
-    int i, j;
-    Mesh* mesh = scan->meshes[mesh_level];
+    int i;
     FillVertex* fvert;
     Vertex* vert;
     Vector new_pos;
@@ -830,7 +772,6 @@ Scan* scan;
     }
 }
 
-
 /******************************************************************************
 Look for edges that should be "swapped" by deleting their common triangles and
 creating two triangles with a shared edge that goes in the other direction.
@@ -838,9 +779,7 @@ creating two triangles with a shared edge that goes in the other direction.
 Entry:
   sc - scan containing mesh
 ******************************************************************************/
-
-swap_hole_edges(sc)
-Scan* sc;
+void swap_hole_edges(Scan* sc)
 {
     int i, j, k;
     Mesh* mesh;
@@ -857,7 +796,6 @@ Scan* sc;
     mesh = sc->meshes[mesh_level];
 
     /* look at all edges in mesh */
-
     for (i = 0; i < num_fverts; i++) {
         vert1 = fverts[i]->vert;
 
@@ -955,4 +893,3 @@ Scan* sc;
         }
     }
 }
-

@@ -22,40 +22,14 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <fcntl.h>
-#include <strings.h>
 
 #include "zipper.h"
 
-void left_proc();
-void middle_proc();
-void right_proc();
-void quit_proc();
-void refresh_drawing();
-
-int edge_flag = 0;      /* draw polygons on the edge of the mesh? */
-int bound_flag = 0;     /* draw edges on boundary of mesh? */
-int pick_flag = 0;      /* pick a graphical primitive? */
-int back_cull = 1;      /* cull backfacing polygons? */
-int back_red = 0;               /* background color */
-int back_grn = 0;
-int back_blu = 0;
-int copied_to_back = 0;         /* has the image been copied to backbuffer? */
-
-/* This should be a variable; a function of hardware performance */
-#define MAX_TRIANGLES_FOR_INTERACTION 5000
-
-#define MOVE_WORLD -1
-#define MOVE_LIGHT -2
-int move_num = MOVE_WORLD;      /* move an object? */
-
-/* "extra" lines to be displayed each frame */
-static Vector* line1 = NULL;
-static Vector* line2 = NULL;
-static unsigned int* line_colors = NULL;
-static int line_num;
-static int line_max;
-
+int backface_tri(Triangle* tri, Matrix mat, Matrix timat);
+void mesh_to_world(Scan* sc, Vector invec, Vector outvec);
+void world_to_mesh(Scan* sc, Vector invec, Vector outvec);
+void world_to_mesh_normal(Scan* sc, Vector in_norm, Vector out_norm);
+void mesh_to_world_normal(Scan* sc, Vector in_norm, Vector out_norm);
 
 /******************************************************************************
 Say if a triangle is front or back facing.
@@ -68,10 +42,7 @@ Entry:
 Exit:
   returns 1 if triangle is backfacing, 0 if it is frontfacing
 ******************************************************************************/
-
-int backface_tri(tri, mat, timat)
-Triangle* tri;
-Matrix mat, timat;
+int backface_tri(Triangle* tri, Matrix mat, Matrix timat)
 {
     Vector norm;
     Vector pnt;
@@ -117,10 +88,7 @@ Entry:
 Exit:
   outvec - transformed point
 ******************************************************************************/
-
-mesh_to_world(sc, invec, outvec)
-Scan* sc;
-Vector invec, outvec;
+void mesh_to_world(Scan* sc, Vector invec, Vector outvec)
 {
     int i;
     Vector v;
@@ -134,7 +102,6 @@ Vector invec, outvec;
     outvec[Z] = v[Z] + sc->ztrans;
 }
 
-
 /******************************************************************************
 Transform point from world space to a meshes space.
 
@@ -145,10 +112,7 @@ Entry:
 Exit:
   outvec - transformed point
 ******************************************************************************/
-
-world_to_mesh(sc, invec, outvec)
-Scan* sc;
-Vector invec, outvec;
+void world_to_mesh(Scan* sc, Vector invec, Vector outvec)
 {
     int i;
     Vector v;
@@ -162,7 +126,6 @@ Vector invec, outvec;
                     v[Z] * sc->rotmat[i][Z];
 }
 
-
 /******************************************************************************
 Transform normal from world space to a meshes space.
 
@@ -173,10 +136,7 @@ Entry:
 Exit:
   out_norm - transformed point
 ******************************************************************************/
-
-world_to_mesh_normal(sc, in_norm, out_norm)
-Scan* sc;
-Vector in_norm, out_norm;
+void world_to_mesh_normal(Scan* sc, Vector in_norm, Vector out_norm)
 {
     int i;
     Vector v;
@@ -190,7 +150,6 @@ Vector in_norm, out_norm;
                       v[Z] * sc->rotmat[i][Z];
 }
 
-
 /******************************************************************************
 Transform normal from meshes space to world space.
 
@@ -201,10 +160,7 @@ Entry:
 Exit:
   out_norm - transformed point
 ******************************************************************************/
-
-mesh_to_world_normal(sc, in_norm, out_norm)
-Scan* sc;
-Vector in_norm, out_norm;
+void mesh_to_world_normal(Scan* sc, Vector in_norm, Vector out_norm)
 {
     int i;
     Vector v;
@@ -216,62 +172,4 @@ Vector in_norm, out_norm;
     out_norm[X] = v[X];
     out_norm[Y] = v[Y];
     out_norm[Z] = v[Z];
-}
-
-
-/******************************************************************************
-Initialize the data structures for "extra" lines to be displayed each frame.
-******************************************************************************/
-
-init_extra_lines()
-{
-    /* maybe free up old space */
-    if (line1 != NULL) {
-        free(line1);
-        free(line2);
-        free(line_colors);
-        line1 = NULL;
-        line2 = NULL;
-        line_colors = NULL;
-    }
-
-    line_num = 0;
-}
-
-
-/******************************************************************************
-Add a line to the "extra" lines to be displayed each frame.
-
-Entry:
-  p1,p2 - endpoints of line segment to be displayed
-  color - line color
-******************************************************************************/
-
-add_extra_line(p1, p2, color)
-Vector p1, p2;
-unsigned int color;
-{
-    /* create new space for lines if necessary */
-    if (line1 == NULL) {
-        line_max = 200;
-        line1 = (Vector*) malloc(sizeof(Vector) * line_max);
-        line2 = (Vector*) malloc(sizeof(Vector) * line_max);
-        line_colors = (unsigned int*) malloc(sizeof(unsigned int) * line_max);
-    }
-
-    /* reallocate more space if necessary */
-
-    if (line_num == line_max) {
-        line_max *= 2;
-        line1 = (Vector*) realloc(line1, sizeof(Vector) * line_max);
-        line2 = (Vector*) realloc(line2, sizeof(Vector) * line_max);
-        line_colors = (unsigned int*)
-                      realloc(line_colors, sizeof(unsigned int) * line_max);
-    }
-
-    /* add the new line to the list */
-    vcopy(p1, line1[line_num]);
-    vcopy(p2, line2[line_num]);
-    line_colors[line_num] = color;
-    line_num++;
 }

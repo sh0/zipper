@@ -45,12 +45,16 @@ static Pair** pairs = NULL;
 static int npairs = 0;
 static int max_pairs;
 
+void init_pairs();
+void add_pair(Vector p1, Vector p2, float weight);
+void match_pairs(Matrix rotmat, Quaternion quat_rot, Vector trans);
+void convert_quat_to_mat(Quaternion q, Matrix mat);
 
 /******************************************************************************
 Initialize the list of pairs.
 ******************************************************************************/
 
-init_pairs()
+void init_pairs()
 {
     int i;
 
@@ -75,9 +79,7 @@ Entry:
   weight - how much this pair should be weighted with respect to other pairs
 ******************************************************************************/
 
-add_pair(p1, p2, weight)
-Vector p1, p2;
-float weight;
+void add_pair(Vector p1, Vector p2, float weight)
 {
     Pair* new;
 
@@ -113,10 +115,7 @@ Exit:
   trans    - translational component
 ******************************************************************************/
 
-match_pairs(rotmat, quat_rot, trans)
-Matrix rotmat;
-Quaternion quat_rot;
-Vector trans;
+void match_pairs(Matrix rotmat, Quaternion quat_rot, Vector trans)
 {
     int i, j, k;
     Vector c1, c2;    /* center of mass for two point collections */
@@ -292,9 +291,7 @@ Exit:
   mat - rotation matrix
 ******************************************************************************/
 
-convert_quat_to_mat(q, mat)
-Quaternion q;
-Matrix mat;
+void convert_quat_to_mat(Quaternion q, Matrix mat)
 {
     float q00, q01, q02, q03;
     float q11, q12, q13;

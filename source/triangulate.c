@@ -102,13 +102,7 @@ init_splitter(a, b, c, d)
 float a, b, c, d;
 {
     int i;
-    char line[80];
     int result;
-
-#if 0
-    fprintf(stderr, "next> ");
-    gets(line);
-#endif
 
     /* allocate the edge list or free up old edges */
     if (edges == NULL) {
@@ -335,7 +329,6 @@ add_edge(i, j)
 int i, j;
 {
     float dx, dy, dz;
-    Point* p1, *p2;
     Edge* edge;
 
     if (nedges >= max_edges) {
@@ -530,7 +523,7 @@ Exit:
 nearly_on_edge(e)
 Edge* e;
 {
-    int i, j;
+    int i;
     float x, y;
     float val;
     float x1, y1;
@@ -601,7 +594,6 @@ int any_intersection(e)
 Edge* e;
 {
     int i;
-    float t;
     Edge* ee;
     float a, b, c;
     float aa, bb, cc;
@@ -740,7 +732,6 @@ int greedy_connect()
     int p1, p2;
     int final_goal;
     Edge* e;
-    int x, y;
     int whoops_flag;
 
     /* maybe rescale point positions */
@@ -963,9 +954,6 @@ int whoops_flag;
     /* debug drawing */
 
     if (whoops_flag) {
-
-        char line[80];
-        int x, y;
 
 #if 0
         clear_screen();
@@ -1198,9 +1186,8 @@ clockwise) as the original boundary polygon.
 
 orient_triangles()
 {
-    int i, j, k;
+    int i;
     int found;
-    int index;
     int p1, p2, p3;
     int b1, b2, b3;
     int orient;
@@ -1406,7 +1393,7 @@ int point_in_which_triangle(x, y, b1, b2, b3)
 float x, y;
 float* b1, *b2, *b3;
 {
-    int i, j, k;
+    int i;
     int result;
     Triangle* tri;
     Edge* e1, *e2, *e3;
@@ -1419,7 +1406,6 @@ float* b1, *b2, *b3;
     Vector sc, tc;
     float r, s, t;
     float* pos1, *pos2, *pos3;
-    int xx, yy, zz;
     float len;
 
     /* check to see that the point is inside the polygon */
@@ -1587,7 +1573,7 @@ Re-scale the points so they fit in the window.
 
 rescale_points()
 {
-    int i, j;
+    int i;
     float x, y;
     float xmin, xmax;
     float ymin, ymax;
@@ -1818,7 +1804,6 @@ Matrix mat, imat;
     float dx, dy, dz;
     Vector v1, v2, v3;
     Matrix t;
-    float det;
 
     /* translational component of matrix */
 
@@ -1870,7 +1855,7 @@ Matrix mat, imat;
     mat_translate(t, dx, dy, dz);
     mat_mult(mat, mat, t);
     mat_copy(imat, mat);
-    det = mat_invert(imat);
+    mat_invert(imat);
 
     return (0);
 }

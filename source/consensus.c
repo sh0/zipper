@@ -56,67 +56,52 @@ static float CONSENSUS_NORMAL_DIST;
 static float CONSENSUS_JITTER_DIST_FACTOR;
 static float CONSENSUS_JITTER_DIST;
 
+void consensus_surface(Scan* scan, int level, float k_scale);
+void new_consensus_surface(Scan* con_scan, Scan** scan_list, int* read_list, int num_scans, int level);
+void marc_find_average_positions(Scan* scan, int level, float k_scale);
+void new_find_average_positions(Scan* con_scan, Scan** scan_list, int* use_old_mesh, int num_scans, int level);
+void intersect_segment_with_mesh(Vertex* v, Mesh* mesh, Scan* vscan, Scan* mscan, float search_dist, int mesh_index);
+void find_average_positions(Scan* scan, int level, float k_scale);
+int count_near_vert();
 Vertex* found_vert_near_vert(int n);
+void verts_near_pos(Mesh* mesh, Vector pnt, Vector norm, float radius);
 
-update_consensus_resolution()
+void update_consensus_resolution()
 {
-    CONSENSUS_POSITION_DIST =
-        ZIPPER_RESOLUTION * CONSENSUS_POSITION_DIST_FACTOR;
-
-    CONSENSUS_NORMAL_DIST =
-        ZIPPER_RESOLUTION * CONSENSUS_NORMAL_DIST_FACTOR;
-
-    CONSENSUS_JITTER_DIST =
-        ZIPPER_RESOLUTION * CONSENSUS_JITTER_DIST_FACTOR;
+    CONSENSUS_POSITION_DIST = ZIPPER_RESOLUTION * CONSENSUS_POSITION_DIST_FACTOR;
+    CONSENSUS_NORMAL_DIST = ZIPPER_RESOLUTION * CONSENSUS_NORMAL_DIST_FACTOR;
+    CONSENSUS_JITTER_DIST = ZIPPER_RESOLUTION * CONSENSUS_JITTER_DIST_FACTOR;
 }
 
-
-set_consensus_position_dist_factor(factor)
-float factor;
+void set_consensus_position_dist_factor(float factor)
 {
     CONSENSUS_POSITION_DIST_FACTOR = factor;
-
-    CONSENSUS_POSITION_DIST =
-        ZIPPER_RESOLUTION * CONSENSUS_POSITION_DIST_FACTOR;
+    CONSENSUS_POSITION_DIST = ZIPPER_RESOLUTION * CONSENSUS_POSITION_DIST_FACTOR;
 }
 
-
-float
-get_consensus_position_dist_factor()
+float get_consensus_position_dist_factor()
 {
     return CONSENSUS_POSITION_DIST_FACTOR;
 }
 
-
-set_consensus_normal_dist_factor(factor)
-float factor;
+void set_consensus_normal_dist_factor(float factor)
 {
     CONSENSUS_NORMAL_DIST_FACTOR = factor;
-
-    CONSENSUS_NORMAL_DIST =
-        ZIPPER_RESOLUTION * CONSENSUS_NORMAL_DIST_FACTOR;
+    CONSENSUS_NORMAL_DIST = ZIPPER_RESOLUTION * CONSENSUS_NORMAL_DIST_FACTOR;
 }
 
-
-float
-get_consensus_normal_dist_factor()
+float get_consensus_normal_dist_factor()
 {
     return CONSENSUS_NORMAL_DIST_FACTOR;
 }
 
-
-set_consensus_jitter_dist_factor(factor)
-float factor;
+void set_consensus_jitter_dist_factor(float factor)
 {
     CONSENSUS_JITTER_DIST_FACTOR = factor;
-
-    CONSENSUS_JITTER_DIST =
-        ZIPPER_RESOLUTION * CONSENSUS_JITTER_DIST_FACTOR;
+    CONSENSUS_JITTER_DIST = ZIPPER_RESOLUTION * CONSENSUS_JITTER_DIST_FACTOR;
 }
 
-
-float
-get_consensus_jitter_dist_factor()
+float get_consensus_jitter_dist_factor()
 {
     return CONSENSUS_JITTER_DIST_FACTOR;
 }
@@ -131,13 +116,9 @@ Entry:
         four, 3 = every eight)
   k_scale - scaling coefficient for search distance
 ******************************************************************************/
-
-consensus_surface(scan, level, k_scale)
-Scan* scan;
-int level;
-float k_scale;
+void consensus_surface(Scan* scan, int level, float k_scale)
 {
-    int i, j;
+    int i;
     Mesh* mesh;
     Cinfo* cinfo;
     Triangle* tri;
@@ -146,10 +127,7 @@ float k_scale;
 
     mesh = scan->meshes[mesh_level];
 
-    init_extra_lines();
-
     /* initialize the consensus geometry information at each vertex */
-
     for (i = 0; i < mesh->nverts; i++) {
         cinfo = (Cinfo*) malloc(sizeof(Cinfo));
         mesh->verts[i]->cinfo = cinfo;
@@ -165,14 +143,12 @@ float k_scale;
     }
 
     /* determine "average" position for vertices, based on all meshes */
-
     marc_find_average_positions(scan, level, k_scale);
     /*
     find_average_positions (scan, level, k_scale);
     */
 
     /* use the averaging information to move the vertices */
-
     zeros = 0;
     for (i = 0; i < mesh->nverts; i++) {
         float s;
@@ -239,17 +215,10 @@ float k_scale;
 
 /******************************************************************************
 Create an "average" surface by weighted average of multiple scans.
-
-Entry:
 ******************************************************************************/
-
-new_consensus_surface(con_scan, scan_list, read_list, num_scans, level)
-Scan* con_scan;
-Scan** scan_list;
-int* read_list;
-int num_scans, level;
+void new_consensus_surface(Scan* con_scan, Scan** scan_list, int* read_list, int num_scans, int level)
 {
-    int i, j;
+    int i;
     Mesh* mesh;
     Cinfo* cinfo;
     Triangle* tri;
@@ -258,10 +227,7 @@ int num_scans, level;
 
     mesh = con_scan->meshes[level];
 
-    init_extra_lines();
-
     /* initialize the consensus geometry information at each vertex */
-
     for (i = 0; i < mesh->nverts; i++) {
         cinfo = (Cinfo*) malloc(sizeof(Cinfo));
         mesh->verts[i]->cinfo = cinfo;
@@ -277,14 +243,12 @@ int num_scans, level;
     }
 
     /* determine "average" position for vertices, based on all meshes */
-
     new_find_average_positions(con_scan, scan_list, read_list, num_scans, level);
     /*
     find_average_positions (scan, level, k_scale);
     */
 
     /* use the averaging information to move the vertices */
-
     zeros = 0;
     for (i = 0; i < mesh->nverts; i++) {
         float s;
@@ -360,18 +324,11 @@ Entry:
             four, 3 = every eight)
   k_scale - scaling coefficient for search distance
 ******************************************************************************/
-
-marc_find_average_positions(scan, level, k_scale)
-Scan* scan;
-int level;
-float k_scale;
+void marc_find_average_positions(Scan* scan, int level, float k_scale)
 {
-    int i, j, k, n;
+    int i, j, k;
     Mesh* mesh, *tmesh;
-    NearPosition near_info;
     Vector pos, norm;
-    int result;
-    int zeros;
     int spacing;
     float search_dist;
     float normal_dist;
@@ -382,7 +339,6 @@ float k_scale;
     Vertex* found_vert_near_vert();
     int count;
     Vector diff;
-    float len;
     int mesh_index;
 
     mesh = scan->meshes[mesh_level];
@@ -521,22 +477,12 @@ float k_scale;
 Find the "average" positions over all scans to the vertices in a given mesh.
 This version uses Marc's suggestion of first coming up with an average
 normal.
-
-Entry:
 ******************************************************************************/
-
-new_find_average_positions(con_scan, scan_list, use_old_mesh, num_scans, level)
-Scan* con_scan;
-Scan** scan_list;
-int* use_old_mesh;
-int num_scans, level;
+void new_find_average_positions(Scan* con_scan, Scan** scan_list, int* use_old_mesh, int num_scans, int level)
 {
-    int i, j, k, n;
+    int i, j, k;
     Mesh* mesh, *tmesh;
-    NearPosition near_info;
     Vector pos, norm;
-    int result;
-    int zeros;
     int spacing;
     float search_dist;
     float normal_dist;
@@ -547,7 +493,6 @@ int num_scans, level;
     Vertex* found_vert_near_vert();
     int count;
     Vector diff;
-    float len;
     int mesh_index;
     float old_size;
 
@@ -739,16 +684,9 @@ Entry:
 Exit:
   adds the nearest intersection to the vertice's consensus info
 ******************************************************************************/
-
-intersect_segment_with_mesh(v, mesh, vscan, mscan, search_dist, mesh_index)
-Vertex* v;
-Mesh* mesh;
-Scan* vscan;
-Scan* mscan;
-float search_dist;
-int mesh_index;
+void intersect_segment_with_mesh(Vertex* v, Mesh* mesh, Scan* vscan, Scan* mscan, float search_dist, int mesh_index)
 {
-    int i, j, k;
+    int i, j;
     Vertex* near_vert;
     Vector pos, norm;
     Vector wpos;
@@ -761,10 +699,9 @@ int mesh_index;
     int found;
     int count;
     int in;
-    float small;
     NearPosition near_info;
-    float conf, nearest_conf;
-    float intensity, nearest_intensity;
+    float nearest_conf;
+    float nearest_intensity;
     Vector barycentric;
     float bary_sum;
     float red, grn, blu;
@@ -972,18 +909,13 @@ Entry:
             four, 3 = every eight)
   k_scale - scaling coefficient for search distance
 ******************************************************************************/
-
-find_average_positions(scan, level, k_scale)
-Scan* scan;
-int level;
-float k_scale;
+void find_average_positions(Scan* scan, int level, float k_scale)
 {
     int i, j;
     Mesh* mesh, *tmesh;
     NearPosition near_info;
     Vector pos, norm;
     int result;
-    int zeros;
     int spacing;
     float search_dist;
     Vertex* v;
@@ -1090,16 +1022,13 @@ print_sizes()
 #endif
 
 /*** set of nearby points to a given position ***/
-
 static Vertex** pts_near = NULL;
 static int pts_near_num;
 static int pts_near_max;
 
-
 /******************************************************************************
 Return how many vertices are in pts_near.
 ******************************************************************************/
-
 int count_near_vert()
 {
     return (pts_near_num);
@@ -1109,9 +1038,7 @@ int count_near_vert()
 /******************************************************************************
 Return nth vertex in pts_near.
 ******************************************************************************/
-
-Vertex* found_vert_near_vert(n)
-int n;
+Vertex* found_vert_near_vert(int n)
 {
     return (pts_near[n]);
 }
@@ -1130,22 +1057,15 @@ Exit:
   places nearby vertices in "pts_near"
 ******************************************************************************/
 
-verts_near_pos(mesh, pnt, norm, radius)
-Mesh* mesh;
-Vector pnt;
-Vector norm;
-float radius;
+void verts_near_pos(Mesh* mesh, Vector pnt, Vector norm, float radius)
 {
-    int i;
     int a, b, c;
     int aa, bb, cc;
     int index;
     Hash_Table* table = mesh->table;
     Vertex* ptr;
-    Vertex* min_ptr = NULL;
     float dx, dy, dz;
     float dist;
-    float dot;
 
     /* allocate room to keep nearby points */
     if (pts_near == NULL) {

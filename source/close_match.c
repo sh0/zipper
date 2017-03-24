@@ -24,7 +24,7 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include "zipper.h"
 
-#define  MATCH_MAX  20
+#define MATCH_MAX  20
 extern Scan* match_from[];
 extern Scan* match_to[];
 extern Scan* match_drag[MATCH_MAX][SCAN_MAX];
@@ -35,7 +35,16 @@ extern int processes_forked;
 
 typedef float StateVector[7];   /* quaternion & translation */
 
-float measure_error();
+void closest_proc();
+void six_degree_match(Scan** move_list, Scan** match_to, Scan** drag_with, int nmove, int nmatch, int ndrag, int num_iters);
+void set_scan_matrix(Scan* scan, Matrix mat);
+void minimize_pairs_dist(Scan* sc1, Scan* sc2, StateVector svec);
+void sv_copy(StateVector src, StateVector dst);
+void sv_to_matrix(StateVector state, Matrix mat);
+float measure_error(Matrix mat, Scan* scan);
+int improve_move(StateVector s1, StateVector s2, StateVector s3, float e1, float e2, float e3, StateVector result);
+void linear_solve(float x[], float y[], int ndata, float* a, float* b);
+void qsolve(float x1, float x2, float x3, float y1, float y2, float y3, float* a, float* b, float* c);
 
 int align_on = 0;
 
@@ -71,35 +80,18 @@ Entry:
   num_iters - number of alignment iterations to perform
 ******************************************************************************/
 
-six_degree_match(move_list, match_to, drag_with, nmove, nmatch, ndrag, num_iters)
-Scan** move_list;
-Scan** match_to;
-Scan** drag_with;
-int nmove;
-int nmatch;
-int ndrag;
-int num_iters;
+void six_degree_match(Scan** move_list, Scan** match_to, Scan** drag_with, int nmove, int nmatch, int ndrag, int num_iters)
 {
-    int i, j, k;
+    int i;
     Matrix rotmat;
-    Matrix rotmat2;
-    Matrix mat;
     Scan* sc1, *sc2;
-    Scan* drag;
-    Quaternion quat_rot;
-    Vector translation;
-    float time;
-    extern float time_it();
     extern float error_measure();
     float error, new_error;
     StateVector svec, svec2;
     static StateVector move_hist[3];
     static float err_hist[3];
     int pipeline;
-    int jump_step;
     int new;
-
-    time = time_it();
 
     sc1 = match_to[0];
     sc2 = move_list[0];
@@ -107,7 +99,6 @@ int num_iters;
     /* perform the matching operation iteratively */
 
     pipeline = 0;
-    jump_step = 0;
 
     /* turn on flag saying we're aligning */
     align_on = 1;
@@ -244,9 +235,7 @@ Entry:
   mat  - matrix to use
 ******************************************************************************/
 
-set_scan_matrix(scan, mat)
-Scan* scan;
-Matrix mat;
+void set_scan_matrix(Scan* scan, Matrix mat)
 {
     /* copy "mat" into scan */
     mat_copy(scan->rotmat, mat);
@@ -273,9 +262,7 @@ Exit:
   svec - transformation state that gives best rotation and translation
 ******************************************************************************/
 
-minimize_pairs_dist(sc1, sc2, svec)
-Scan* sc1, *sc2;
-StateVector svec;
+void minimize_pairs_dist(Scan* sc1, Scan* sc2, StateVector svec)
 {
     int j;
     Quaternion quat_rot;
@@ -322,8 +309,7 @@ StateVector svec;
 Copy a seven-component state vector.
 ******************************************************************************/
 
-sv_copy(src, dst)
-StateVector src, dst;
+void sv_copy(StateVector src, StateVector dst)
 {
     dst[0] = src[0];
     dst[1] = src[1];
@@ -339,9 +325,7 @@ StateVector src, dst;
 Convert a seven-element state vector into a matrix.
 ******************************************************************************/
 
-sv_to_matrix(state, mat)
-StateVector state;
-Matrix mat;
+void sv_to_matrix(StateVector state, Matrix mat)
 {
     Quaternion quat;
 
@@ -362,11 +346,9 @@ Matrix mat;
 Return the mean error between point pairs aligned by matrix "mat".
 ******************************************************************************/
 
-float measure_error(mat, scan)
-Matrix mat;
-Scan* scan;
+float measure_error(Matrix mat, Scan* scan)
 {
-    int i, j, count;
+    int i, count;
     Vector pos, diff;
     float dist;
     float sum;
@@ -422,12 +404,9 @@ Exit:
   returns 1 if the routine produced an "improved" state vector
 ******************************************************************************/
 
-int improve_move(s1, s2, s3, e1, e2, e3, result)
-StateVector s1, s2, s3;
-float e1, e2, e3;
-StateVector result;
+int improve_move(StateVector s1, StateVector s2, StateVector s3, float e1, float e2, float e3, StateVector result)
 {
-    int i, j;
+    int i;
     StateVector diff1, diff2;
     float dlen1, dlen2;
     float dot;
@@ -567,10 +546,7 @@ Exit:
   a,b - coefficients of fitting a line: y = ax + b (Note order of a and b!)
 ******************************************************************************/
 
-linear_solve(x, y, ndata, a, b)
-float x[], y[];
-int ndata;
-float* a, *b;
+void linear_solve(float x[], float y[], int ndata, float* a, float* b)
 {
     int i;
     float sx;
@@ -612,14 +588,10 @@ Exit:
   a,b,c - coefficients of fitting quadratic: y = ax^2 + by + c
 ******************************************************************************/
 
-qsolve(x1, x2, x3, y1, y2, y3, a, b, c)
-float x1, x2, x3;
-float y1, y2, y3;
-float* a, *b, *c;
+void qsolve(float x1, float x2, float x3, float y1, float y2, float y3, float* a, float* b, float* c)
 {
     Vector y;
     Matrix mat, imat;
-    float det;
 
     vset(y, y1, y2, y3);
 
@@ -644,7 +616,7 @@ float* a, *b, *c;
     mat[3][3] = 1;
 
     mat_copy(imat, mat);
-    det = mat_invert(imat);
+    mat_invert(imat);
 
 #if 0
     printf("mat:\n");

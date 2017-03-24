@@ -146,24 +146,15 @@ void clip_triangles(Scan* sc1, Scan* sc2)
 {
     int i, j;
     Mesh* m1, *m2;
-    Vertex* vert;
     Triangle* tri;
     Vector c1, c2, c3;
     Vector norm1, norm2, norm3;
     int r1, r2, r3;
     NearPosition n1, n2, n3;
-    int count;
     float max_length;
-    float time;
     extern float time_it();
     extern float edge_length_max();
     int inc;
-
-#ifdef DEBUG_CLIP
-    printf("start of clip_triangles\n");
-#endif
-
-    time = time_it();
 
     m1 = sc1->meshes[mesh_level];
     m2 = sc2->meshes[mesh_level];
@@ -247,8 +238,6 @@ void clip_triangles(Scan* sc1, Scan* sc2)
         m1->verts[i]->count = 0;
 
     /* examine each marked triangle in turn and clip them */
-
-    init_extra_lines();
     max_length = edge_length_max(mesh_level);
 
     for (i = 0; i < m1->ntris; i++) {
@@ -316,18 +305,6 @@ void clip_triangles(Scan* sc1, Scan* sc2)
 
     /* remove un-used vertices */
     remove_unused_verts(m1);
-
-#if 0
-    /* the extra lines give (roughly) how many cut vertices were introduced */
-    print_extra_lines();
-#endif
-
-#ifdef DEBUG_CLIP
-    printf("end of clip_triangles\n");
-#endif
-
-    time = time_it();
-    printf("time: %.3f\n", time);
 }
 
 
@@ -342,8 +319,8 @@ Entry:
 
 void perform_triangle_clipping(Scan* sc1, Scan* sc2)
 {
-    int i, j, k;
-    Mesh* m1, *m2;
+    int i, j;
+    Mesh* m1;
     Triangle* tri;
     int count;
     Clip_List* potential_vertices(), *split_list();
@@ -354,7 +331,6 @@ void perform_triangle_clipping(Scan* sc1, Scan* sc2)
     Vector tri_norm;
 
     m1 = sc1->meshes[mesh_level];
-    m2 = sc2->meshes[mesh_level];
 
     /* find all triangles that have been clipped */
     for (i = m1->ntris - 1; i >= 0; i--) {
@@ -466,7 +442,7 @@ Entry:
 
 void process_vertices(Vector tnorm, int tindex, Clip_List* clist, Mesh* mesh)
 {
-    int i, j;
+    int j;
     int index1, index2;
     Clip_List* clist2;
 
@@ -618,7 +594,7 @@ Entry:
 
 void list_to_tris(Triangle* tri, Clip_List* clist, Mesh* mesh)
 {
-    int i, j;
+    int i;
     Clip_Vertex* v = clist->list;
     Triangle* new_tri;
 
@@ -663,7 +639,7 @@ Entry:
 
 void new_list_to_tris(Vector tnorm, int index, Clip_List* clist, Mesh* mesh)
 {
-    int i, j;
+    int i;
     Clip_Vertex* v = clist->list;
     Vector vec;
     Triangle* new_tri;
@@ -1579,9 +1555,6 @@ void cut_triangle(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan)
                 vscale(pos, s[ind]);
                 vadd(p1, pos, pos);
                 mesh_to_world(scan, pos, pos);
-#if 0
-                add_extra_line(pos, pos, 0x00ff00);
-#endif
             }
 
         }
@@ -1600,7 +1573,7 @@ Entry:
 
 void old_cut_triangle(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan)
 {
-    int i, j, k;
+    int i, j;
     Vertex* vert;
     Edge* edge;
     Vector x1, x2;
@@ -1649,10 +1622,6 @@ void old_cut_triangle(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan)
                 /* see if the nearest approach between lines was within */
                 /* the two line segments */
                 if (t1 > 0 && t1 < 1 && t2 > 0 && t2 < 1) {
-                    Vector xx1, xx2;
-                    mesh_to_world(scan, x1, xx1);
-                    mesh_to_world(scan, x2, xx2);
-                    add_extra_line(xx1, xx2, 0x00ff00);
                     count++;
                 }
             }
@@ -1784,13 +1753,11 @@ Exit:
 
 void verts_near_edges(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float radius, float min_dot)
 {
-    int i;
     int a, b, c;
     int aa, bb, cc;
     int index;
     Hash_Table* table = mesh->table;
     Vertex* ptr;
-    Vertex* min_ptr = NULL;
     float dx, dy, dz;
     float dist;
     float dot;
@@ -1877,13 +1844,9 @@ Entry:
 
 void edges_near_edges(Triangle* tri, Mesh* m1, Mesh* m2, Scan* scan)
 {
-    int i, j, k;
+    int i, j;
     Vertex* vert;
     Edge* edge;
-    Vector x1, x2;
-    float t1, t2;
-    int result;
-    int count = 0;
 
     /* empty the list of nearby edges */
     edges_near_num = 0;
@@ -1968,7 +1931,7 @@ Entry:
 
 void make_clip_triangles(Scan* scan, Mesh* clipto)
 {
-    int i, j;
+    int i;
     Mesh* mesh;
     EdgeLoop* looplist;
     Edge* fedge, *edge, *nedge;
@@ -1980,8 +1943,6 @@ void make_clip_triangles(Scan* scan, Mesh* clipto)
     Triangle* t0, *t1, *t2;
     Vector dir, pos;
     int been_around;
-    Triangle* atri;
-    More_Tri_Stuff* more;
 
     /* clear out any old mesh for the edges */
     /*** THIS SHOULD ACTUALLY FREE UP MORE STUFF !!! ***/
@@ -2348,8 +2309,6 @@ Exit:
 int new_cut(Edge* edge, Vertex* v1, Vertex* v2, float t, float s, int inward)
 {
     int i, j;
-    int index;
-    Vertex* vtemp;
     Triangle* tri1, *tri2;
     Cut* cut;
 
@@ -2403,11 +2362,10 @@ Entry:
 
 void add_cut_to_triangle(Triangle* tri, Cut* cut)
 {
-    int i, j;
+    int i;
     int forward;
     Clipped_Edge* clips;
     Clipped_Edge* clip;
-    int index;
 
     /* see if triangle already has a list of clipped edges */
     /* and if not, create a list of three clipped edges */
@@ -2431,13 +2389,11 @@ void add_cut_to_triangle(Triangle* tri, Cut* cut)
         if (tri->verts[i] == cut->v1 && tri->verts[(i + 1) % 3] == cut->v2) {
             clip = &tri->clips[i];
             forward = 1;
-            index = i;  /* for debug */
             break;
         }
         if (tri->verts[i] == cut->v2 && tri->verts[(i + 1) % 3] == cut->v1) {
             clip = &tri->clips[i];
             forward = 0;
-            index = i;  /* for debug */
             break;
         }
     }
@@ -2468,7 +2424,7 @@ Entry:
 
 void init_cuts(Scan* scan, Mesh* clipto)
 {
-    int i, j;
+    int i;
     EdgeLoop* looplist;
     Edge* fedge, *edge;
     int been_around;
@@ -2574,11 +2530,9 @@ Entry:
 void introduce_all_cuts(Mesh* mesh, Mesh* not_mesh)
 {
     int i, j, k;
-    EdgeLoop* looplist;
-    Edge* fedge, *edge;
+    Edge* edge;
     Edge* edges[5];
     int edge_count;
-    int been_around;
     Triangle* tri;
     Triangle* tnew1, *tnew2;
     Triangle* dummy1, *dummy2;
@@ -2668,13 +2622,10 @@ Exit:
 
 void introduce_cuts(Triangle* tri, Edge* edge, Mesh* mesh, Triangle** first_tri, Triangle** last_tri)
 {
-    int i, j, k;
+    int i;
     int index;
     Vertex* v1, *v2, *v3;
-    Vector coord;
-    int vert_index;
     Vertex* old_vert, *new_vert;
-    float t;
 
     /*
     for (i = 0; i < edge->cut_num; i++)
@@ -2751,7 +2702,7 @@ Entry:
 
 void sort_cuts(Edge* edge)
 {
-    int i, j, k;
+    int i, j;
     int index;
     Cut* temp;
 

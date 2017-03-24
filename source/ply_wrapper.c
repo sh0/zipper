@@ -282,7 +282,7 @@ void write_ply(Scan* sc, char* filename, int writeInfo)
 
 int is_range_grid_file(char* filename)
 {
-    int i, j;
+    int i;
     PlyFile* ply;
     int nelems;
     char** elist;
@@ -483,8 +483,6 @@ char* name;
 {
     int i, j, k, index, best_index;
     int xx, yy;
-    int nlg;
-    int nlt;
     PlyFile* ply;
     RangeData* plydata = NULL;
     char** obj_info;
@@ -496,12 +494,9 @@ char* name;
     int file_type;
     float version;
     PlyProperty** plist;
-    int argc;
-    char** argv;
     int num_rows, num_cols;
     RangePnt range_pnt;
     A_Vertex vert;
-    Vector pos;
     char* elem_name;
     int get_std_dev = 0;
     int get_confidence = 0;
@@ -511,7 +506,6 @@ char* name;
     int has_green = 0;
     int has_blue = 0;
     int is_warped = 0;
-    int r, g, b;
     char cont;
     int erodeMax, is_cyberware_scanner_data, count;
     char* continuity;

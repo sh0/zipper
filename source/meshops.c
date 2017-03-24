@@ -73,7 +73,7 @@ Scan* sc;
 {
     int i, j, k;
     Mesh* mesh;
-    Vertex* v1, *v2;
+    Vertex* v1;
     Triangle* tri;
 #define VVMAX 20
     static Vertex* vin[VVMAX], *vout[VVMAX];
@@ -235,7 +235,6 @@ int in_out_count;
     int ii, jj;
     static Vector din[20], dout[20];
     extern float edge_length_max();
-    float dist_okay;
     float max, dot;
 
     /* make vectors for each vin and vout */
@@ -263,10 +262,9 @@ int in_out_count;
     /* create triangle between vin[ii] and vout[jj] */
 
     /* Not used?? */
-    dist_okay = edge_length_max(mesh_level);
+    edge_length_max(mesh_level);
 
     /* check unlikely case that we're not allowed to add such a new triangle */
-
     if (!check_proposed_tri(vert, vin[ii], vout[jj])) {
         int shared_count;
         Triangle* tri;
@@ -362,7 +360,6 @@ int index1;
 float t;
 Triangle** tri1, ** tri2;
 {
-    int i, j, k;
     Mesh* mesh;
     int index2, index3;
     Vertex* v1, *v2, *v3;
@@ -529,14 +526,14 @@ Entry:
 fill_small_holes(sc)
 Scan* sc;
 {
-    int i, j, k;
+    int i;
     Mesh* mesh;
     Edge** loops;
     int nloops;
     int been_around;
     Edge* edge;
     int edge_count;
-    Triangle* last_tri, tri;
+    Triangle* last_tri;
     int tri_count;
 
     /* fill in any "bows" in the mesh */
@@ -617,10 +614,7 @@ Mesh* mesh;
 Edge* edge;
 int edge_count;
 {
-    int i, j;
-    Edge* ptr;
     Vertex* v1, *v2, *v3, *v4;
-    Triangle* tri;
 
     /* mark that the edges are not valid in this mesh */
     mesh->edges_valid = 0;
@@ -632,7 +626,7 @@ int edge_count;
         v1 = edge->next->v2;
         if (!check_proposed_tri(v1, v2, v3))
             return;
-        tri = make_triangle(mesh, v1, v2, v3, 1e20);
+        make_triangle(mesh, v1, v2, v3, 1e20);
         vertex_edge_test(v1);
         vertex_edge_test(v2);
         vertex_edge_test(v3);
@@ -668,7 +662,6 @@ Vertex* v1, *v2, *v3, *v4;
 {
     Vector dir1, dir2, dir3, dir4;
     float dot1, dot2, dot3, dot4;
-    Triangle* tri;
 
     /* create normalized vectors around the edge of the hole */
     vsub(v2->coord, v1->coord, dir1);
@@ -690,13 +683,13 @@ Vertex* v1, *v2, *v3, *v4;
     if (dot1 + dot3 < dot2 + dot4) {
         if (!check_proposed_tri(v1, v2, v3) || !check_proposed_tri(v1, v3, v4))
             return;
-        tri = make_triangle(mesh, v1, v2, v3, 1e20);
-        tri = make_triangle(mesh, v1, v3, v4, 1e20);
+        make_triangle(mesh, v1, v2, v3, 1e20);
+        make_triangle(mesh, v1, v3, v4, 1e20);
     } else {
         if (!check_proposed_tri(v1, v2, v4) || !check_proposed_tri(v2, v3, v4))
             return;
-        tri = make_triangle(mesh, v1, v2, v4, 1e20);
-        tri = make_triangle(mesh, v2, v3, v4, 1e20);
+        make_triangle(mesh, v1, v2, v4, 1e20);
+        make_triangle(mesh, v2, v3, v4, 1e20);
     }
 
     /* re-compute whether each vertex is on an edge */
@@ -723,9 +716,8 @@ Entry:
 remove_cut_vertices(scan)
 Scan* scan;
 {
-    int i, j, k;
+    int i;
     Mesh* mesh;
-    Triangle* tri, *new_tri;
     int count;
     Vertex* v;
     int removed;
@@ -795,9 +787,9 @@ int remove_a_vertex(scan, v)
 Scan* scan;
 Vertex* v;
 {
-    int i, j, k;
+    int j, k;
     Mesh* mesh;
-    Triangle* tri, *new_tri;
+    Triangle* tri;
     Vertex** vin, **vout;
     Vertex* tvert;
     int found;
@@ -807,8 +799,6 @@ Vertex* v;
     float w;
     int p1, p2, p3;
     int get_ntris();
-    int removed;
-    int on_edge;
     int ntris;
 
     mesh = scan->meshes[mesh_level];
@@ -899,7 +889,7 @@ Vertex* v;
     for (j = 0; j < get_ntris(); j++) {
         get_triangle(j, &p1, &p2, &p3);
         if (check_proposed_tri(vin[p1], vin[p2], vin[p3]))
-            new_tri = make_triangle(mesh, vin[p1], vin[p2], vin[p3], 1e20);
+            make_triangle(mesh, vin[p1], vin[p2], vin[p3], 1e20);
 #ifdef DEBUG_CLIP
         else
             printf("remove_a_vertex: proposed triangle bad\n");
@@ -934,7 +924,7 @@ remove_sliver_tris(scan, fract)
 Scan* scan;
 float fract;
 {
-    int i, j, k;
+    int i;
     Mesh* mesh;
     float* v1, *v2, *v3;
     float d1, d2, d3;
@@ -1015,7 +1005,6 @@ float cos_max;
     float* n1, *n2;
     float min_dot, dot;
     Vertex* vert;
-    int removed;
 
     /*
       printf("%f\n", cos_max);
@@ -1071,16 +1060,14 @@ float max_aspect;
 float min_cos;
 int diff;
 {
-    int i, j, k;
+    int i;
     Mesh* mesh;
     float* v1, *v2, *v3, vec[3];
     float* n1, *n2, *n3;
     float len1, len2, len3;
     float aspect;
     float dot1, dot2, dot3;
-    float d1, d2, d3;
     float edge_length_max();
-    float min;
     float min_len, max_len;
     Triangle* tri;
 
@@ -1204,7 +1191,7 @@ remove_short_edges(scan, fract)
 Scan* scan;
 float fract;
 {
-    int i, j, k;
+    int i, j;
     Mesh* mesh;
     Vertex* v1, *v2;
     Vector diff;
@@ -1273,7 +1260,6 @@ Vertex* v1, *v2;
     int i, j;
     int v1ntris, v2ntris;
     Triangle* tri;
-    int found;
     int del_count = 0;
     Vertex* w1, *w2, *w3;
 
@@ -1367,7 +1353,6 @@ Scan* scan;
     Vertex* v1, *v2, *v3;
     Vertex* m1, *m2, *m3;
     int count;
-    int sum = 0;
     Triangle* tri;
     Vertex* vert;
     Vector mid;
@@ -1722,7 +1707,7 @@ compute_smoothing(v, new_pos)
 Vertex* v;
 Vector new_pos;
 {
-    int i, j;
+    int i;
     int count = 0;
     Vector sum;
     float k;
@@ -1755,7 +1740,7 @@ Entry:
 smooth_vertices(sc)
 Scan* sc;
 {
-    int i, j, k;
+    int i;
     Mesh* mesh;
     Vertex* v;
     Vector new_pos;

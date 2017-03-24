@@ -44,71 +44,56 @@ static float EAT_START_FACTOR;
 static float EAT_START_DIST;
 
 
-update_eat_resolution()
+void update_eat_resolution()
 {
     EAT_NEAR_DIST = ZIPPER_RESOLUTION * EAT_NEAR_DIST_FACTOR;
 }
 
-set_eat_near_dist_factor(factor)
-float factor;
+void set_eat_near_dist_factor(float factor)
 {
     EAT_NEAR_DIST_FACTOR = factor;
     EAT_NEAR_DIST = ZIPPER_RESOLUTION * EAT_NEAR_DIST_FACTOR;
 }
 
-
-float
-get_eat_near_dist_factor()
+float get_eat_near_dist_factor()
 {
     return EAT_NEAR_DIST_FACTOR;
 }
 
-
-set_eat_near_cos(cosine)
-float cosine;
+void set_eat_near_cos(float cosine)
 {
     EAT_NEAR_COS = cosine;
 }
 
-float
-get_eat_near_cos()
+float get_eat_near_cos()
 {
     return EAT_NEAR_COS;
 }
 
-
-set_eat_start_iters(iters)
-int iters;
+void set_eat_start_iters(int iters)
 {
     EAT_START_ITERS = iters;
 }
 
-
-int
-get_eat_start_iters()
+int get_eat_start_iters()
 {
     return EAT_START_ITERS;
 }
 
-set_eat_start_factor(factor)
-float factor;
+void set_eat_start_factor(float factor)
 {
     EAT_START_FACTOR = factor;
     EAT_START_DIST = ZIPPER_RESOLUTION * EAT_START_FACTOR;
 }
 
-
-float
-get_eat_start_factor()
+float get_eat_start_factor()
 {
     return EAT_START_FACTOR;
 }
 
-
 /******************************************************************************
 Zipper together everything all at once.
 ******************************************************************************/
-
 do_it_all()
 {
     printf("Zipper: eat_edge_pair()\n");
@@ -169,7 +154,6 @@ do_it_all()
 /******************************************************************************
 Eat away at the edges of two meshes where they are aligned.
 ******************************************************************************/
-
 void eat_edge_proc()
 {
     int i;
@@ -196,11 +180,9 @@ void eat_edge_proc()
     printf("time: %.3f\n", time);
 }
 
-
 /******************************************************************************
 Repeatedly eat away at a pair of meshes.
 ******************************************************************************/
-
 eat_edge_pair(sc1, sc2)
 Scan* sc1, *sc2;
 {
@@ -272,7 +254,6 @@ eat_mesh_edges().
 Entry:
   scan - the scan whose mesh will be eaten
 ******************************************************************************/
-
 init_eating(scan)
 Scan* scan;
 {
@@ -342,7 +323,6 @@ eat_mesh_edges().
 Entry:
   scan - the scan whose mesh was be eaten
 ******************************************************************************/
-
 done_eating(scan)
 Scan* scan;
 {
@@ -362,7 +342,6 @@ Scan* scan;
     free(mesh->eat_list);
 }
 
-
 /******************************************************************************
 Remove the triangles from the edge of one mesh that match the surface of
 another mesh.  Must have called init_eating() beforehand.
@@ -379,7 +358,6 @@ Entry:
 Exit:
   returns how many triangles were removed
 ******************************************************************************/
-
 int eat_mesh_edges(sc1, sc2, draw, conf, to_edge, near_dist)
 Scan* sc1, *sc2;
 int draw;
@@ -387,14 +365,13 @@ int conf, to_edge;
 float near_dist;
 {
     int i, j, k;
-    Mesh* m1, *m2;
+    Mesh* m2;
     Triangle* tri;
     Triangle* otri;
     Vertex* vert;
     int count;
     void mark_for_eating();
 
-    m1 = sc1->meshes[mesh_level];
     m2 = sc2->meshes[mesh_level];
 
     /* Look through triangles on the list of potentially deletable ones, */
@@ -463,7 +440,6 @@ float near_dist;
     return (count);
 }
 
-
 /******************************************************************************
 Go through list of potentially deletable triangles, marking them if they
 should be deleted.
@@ -477,13 +453,12 @@ Entry:
   to_edge - mark all the way to the edge?  If not, then stop short.
 
 ******************************************************************************/
-
 void mark_for_eating(sc1, sc2, draw, conf, to_edge)
 Scan* sc1, *sc2;
 int draw;
 int conf, to_edge;
 {
-    int i, j, k;
+    int i, j;
     Mesh* m1, *m2;
     Triangle* tri;
     Vertex* vert;
@@ -498,7 +473,6 @@ int conf, to_edge;
     int myid;
     int start, end;
     int processes;
-    int is_edge_tri;
 
     near_dist = global_near_dist;
 
@@ -590,11 +564,8 @@ int conf, to_edge;
 /******************************************************************************
 Zipper together a model.
 ******************************************************************************/
-
 void zipper_proc()
 {
-    int i;
-
     move_vertices(scans[1], scans[0]);
 }
 
@@ -602,7 +573,6 @@ void zipper_proc()
 /******************************************************************************
 Align edges of meshes.
 ******************************************************************************/
-
 void align_proc()
 {
     int i;
@@ -617,7 +587,6 @@ void align_proc()
         }
 }
 
-
 /******************************************************************************
 Gather the triangles of two meshes together into one mesh.
 
@@ -625,11 +594,10 @@ Entry:
   sc1 - scan with first mesh. all triangles go into this mesh
   sc2 - scan with second mesh. to be emptied
 ******************************************************************************/
-
 gather_triangles(sc1, sc2)
 Scan* sc1, *sc2;
 {
-    int i, j;
+    int i;
     Mesh* m1, *m2;
     Vertex* vert;
     Triangle* tri;
@@ -724,7 +692,6 @@ Scan* sc1, *sc2;
     m2->nverts = 0;
 }
 
-
 /******************************************************************************
 Zipper together nearby polygons on different meshes.
 
@@ -732,7 +699,6 @@ Entry:
   sc1 - scan with first mesh
   sc2 - scan with second mesh
 ******************************************************************************/
-
 zipper_meshes(sc1, sc2)
 Scan* sc1, *sc2;
 {
@@ -858,21 +824,19 @@ Entry:
   sc1 - scan with first mesh
   sc2 - scan with second mesh
 ******************************************************************************/
-
 fill_in_holes(sc1, sc2)
 Scan* sc1, *sc2;
 {
     int i, j, k;
     Mesh* m1, *m2;
-    Vertex* vert;
-    EdgeLoop* list1, *list2;
+    EdgeLoop* list2;
     Edge* e, *e_next, *e_orig;
     Vertex* vert1, *vert2;
     Triangle* tri;
     int found;
     int result;
     int index;
-    int r1, r2;
+    int r1;
     Vector pos;
 
     m1 = sc1->meshes[mesh_level];
@@ -884,7 +848,6 @@ Scan* sc1, *sc2;
     if (!m2->edges_valid)
         create_edge_list(m2);
 
-    list1 = &m1->looplist;
     list2 = &m2->looplist;
 
     /* examine each vertex of each edge loop to see if there are any */
@@ -1070,9 +1033,6 @@ Scan* sc1, *sc2;
     /* add in the new triangles */
 
     for (i = 0; i < new_tri_count; i++) {
-        Triangle* tri;
-        Vector vec;
-        float dot;
         make_triangle(m2, new_tris[i]->verts[0],
                       new_tris[i]->verts[1],
                       new_tris[i]->verts[2],
@@ -1109,7 +1069,7 @@ Exit:
 int find_edge_orientation(v1, v2)
 Vertex* v1, *v2;
 {
-    int i, j;
+    int i;
     Triangle* tri;
     int index;
 
@@ -1154,7 +1114,6 @@ Scan* source, *dest;
 {
     int i, j, k;
     Mesh* msource, *mdest;
-    int result;
     Vertex* vert;
     Vertex* dvert;
     Triangle* tri;

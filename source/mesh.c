@@ -25,7 +25,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <assert.h>
 #include <math.h>
 #include <string.h>
-#include <fcntl.h>
 
 #include "zipper.h"
 #include "raw.h"
@@ -538,11 +537,9 @@ float table_dist;
 {
     int i, j;
     int ii, jj;
-    int a, b;
     int inc;
     Vector vec;
     RangeData* plydata = sc->ply_geom;
-    int result;
     int index;
     int in1, in2, in3, in4;
     Vertex* vt1, *vt2, *vt3, *vt4;
@@ -723,7 +720,7 @@ Mesh* mesh;
 Scan* scan;
 int rot_flag, mult;
 {
-    int i, j;
+    int i;
     float val;
     Vertex* vert;
     int lg;
@@ -797,7 +794,7 @@ lower_edge_confidence(mesh, level)
 Mesh* mesh;
 int level;
 {
-    int i, j, k;
+    int i, j;
     int pass;
     int val;
     float recip;
@@ -1117,13 +1114,11 @@ Triangle* tri;
 Mesh* mesh;
 int dverts;
 {
-    int i, j;
+    int i;
     int index;
-    Vertex* v[3];
 
     /* remove mention of this triangle from its vertices */
     /* (deleting the vertices if they belong to no other triangles) */
-
     for (i = 0; i < 3; i++)
         remove_tri_from_vert(tri->verts[i], tri, i, mesh, dverts);
 
@@ -1392,7 +1387,7 @@ Exit:
 int check_proposed_edge(v1, v2)
 Vertex* v1, *v2;
 {
-    int i, j, k;
+    int i, j;
     Triangle* tri;
     Triangle* uses_v1;
     int use_count;
@@ -1777,7 +1772,7 @@ Entry:
 clean_up_mesh(scan)
 Scan* scan;
 {
-    int i, j, k;
+    int i, j;
     Mesh* mesh;
     int count1, count2;
     Vertex* vert;

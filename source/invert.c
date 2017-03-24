@@ -59,14 +59,19 @@ When we are done, the double matrix should look like this:
 The right half of the double matrix is  the inverse.
 */
 
+float mat_invert(Matrix mat);
+void invert_to_double(Matrix mat, Double_mat dmat);
+void invert_from_double(Matrix mat, Double_mat dmat);
+void invert_switch_rows(int row1, int row2, Double_mat dmat);
+void invert_subtract_rows(int row1, int row2, float m, Double_mat dmat);
+void invert_multiply_row(int row, float m, Double_mat dmat);
+int invert_best_lead(int row, Double_mat dmat);
 
 /******************************************************************************
 Invert a 4 by 4 matrix.
 Returns the determinant of the matrix.
 ******************************************************************************/
-
-float mat_invert(mat)
-Matrix mat;
+float mat_invert(Matrix mat)
 {
     Double_mat dmat;
     int a, b;
@@ -112,15 +117,11 @@ Matrix mat;
     return (det);
 }
 
-
 /******************************************************************************
 Place a matrix into the left side of a double matrix and place the identity
 matrix on the right side.
 ******************************************************************************/
-
-invert_to_double(mat, dmat)
-Matrix mat;
-Double_mat dmat;
+void invert_to_double(Matrix mat, Double_mat dmat)
 {
     int i, j;
 
@@ -134,17 +135,12 @@ Double_mat dmat;
         dmat [j + MAT_SIZE] [j] = 1.0;
 }
 
-
 /******************************************************************************
 Returns the right half of a double matrix.
 ******************************************************************************/
-
-invert_from_double(mat, dmat)
-Matrix mat;
-Double_mat dmat;
+void invert_from_double(Matrix mat, Double_mat dmat)
 {
     int i, j;
-
     for (i = 0; i < MAT_SIZE; i++)
         for (j = 0; j < MAT_SIZE; j++)
             mat [i] [j] = dmat [i + MAT_SIZE] [j];
@@ -154,14 +150,10 @@ Double_mat dmat;
 /******************************************************************************
 Switch two rows of a double matrix.
 ******************************************************************************/
-
-invert_switch_rows(row1, row2, dmat)
-int row1, row2;
-Double_mat dmat;
+void invert_switch_rows(int row1, int row2, Double_mat dmat)
 {
     int i;
     float t;
-
     for (i = 0; i < DOUBLE_SIZE; i++) {
         t = dmat [i] [row1];
         dmat [i] [row1] = dmat [i] [row2];
@@ -169,38 +161,25 @@ Double_mat dmat;
     }
 }
 
-
 /******************************************************************************
 Subtract a multiple of row 1 from row 2.
 ******************************************************************************/
-
-invert_subtract_rows(row1, row2, m, dmat)
-int row1, row2;
-float m;
-Double_mat dmat;
+void invert_subtract_rows(int row1, int row2, float m, Double_mat dmat)
 {
     int i;
-
     for (i = 0; i < DOUBLE_SIZE; i++)
         dmat [i] [row2] = dmat [i] [row2] - m * dmat [i] [row1];
 }
 
-
 /******************************************************************************
 Multiply each element of a row by a number.
 ******************************************************************************/
-
-invert_multiply_row(row, m, dmat)
-int row;
-float m;
-Double_mat dmat;
+void invert_multiply_row(int row, float m, Double_mat dmat)
 {
     int i;
-
     for (i = 0; i < DOUBLE_SIZE; i++)
         dmat [i] [row] = m * dmat [i] [row];
 }
-
 
 /******************************************************************************
 Returns the number of the row whose leading value is largest in absolute
@@ -213,10 +192,7 @@ Entry:
 Exit:
   returns best row number, or -1 if there is no good row
 ******************************************************************************/
-
-invert_best_lead(row, dmat)
-int row;
-Double_mat dmat;
+int invert_best_lead(int row, Double_mat dmat)
 {
     float max;
     int j, pos;

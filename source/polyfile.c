@@ -35,12 +35,11 @@ Entry:
   scan     - which scan to write
   filename - name of file to write to
 ******************************************************************************/
-
 scan_to_file(scan, filename)
 Scan* scan;
 char* filename;
 {
-    int i, j, k;
+    int i;
     Mesh* mesh;
     Vertex* v;
     FILE* fp;
@@ -105,7 +104,7 @@ Exit:
 int file_to_scan(filename)
 char* filename;
 {
-    int i, j, k;
+    int i, j;
     FILE* fp;
     Scan* sc;
     Mesh* mesh;
@@ -280,7 +279,7 @@ write_bin_polyfile(scan, name)
 Scan* scan;
 char* name;
 {
-    int i, j;
+    int i;
     FILE* fp;
     char filename[80];
     Mesh* mesh;
@@ -373,7 +372,7 @@ Exit:
 int read_bin_polyfile(filename)
 char* filename;
 {
-    int i, j, k;
+    int i, j;
     FILE* fp;
     Scan* sc;
     Mesh* mesh;
@@ -382,8 +381,6 @@ char* filename;
     char sprop[200];
     char name[80];
     Vector pos;
-    float nx, ny, nz;
-    int in1, in2, in3;
     int result;
     Vertex* v1, *v2, *v3;
     int nverts, ntris;
@@ -578,7 +575,7 @@ Exit:
 
 Scan* new_scan(char* name, int type)
 {
-    int i, j, k;
+    int j, k;
     Scan* sc;
 
     scans[nscans] = (Scan*) malloc(sizeof(Scan));

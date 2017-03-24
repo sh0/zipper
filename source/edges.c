@@ -26,22 +26,16 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include "matrix.h"
 
 /* define either VERBOSE_EDGES or NO_VERBOSE_EDGES */
-
 #define NO_VERBOSE_EDGES
 
-extern int bound_flag;
-
-
-/******************************************************************************
-See that the boundary edges are drawn.  May have to create the boundary
-edge list.
-******************************************************************************/
-
-void make_edge_proc()
-{
-    bound_flag = 1 - bound_flag;
-}
-
+void create_edge_list(Mesh* mesh);
+void make_edge_loops(Mesh* mesh);
+void follow_edges(Mesh* mesh, Edge* e_orig, int num);
+void swap_verts_in_edge(Edge* e);
+void add_edge_to_mesh(Mesh* mesh, Vertex* v1, Vertex* v2);
+void new_zipper_proc();
+void join_loops(Scan* sc1, Scan* sc2);
+void follow_loops(Scan* sc1, Scan* sc2, Mesh* m1, Mesh* m2, Vertex* v1, Vertex* v2, Edge* e1);
 
 /******************************************************************************
 Create the edge list for a mesh.
@@ -49,14 +43,11 @@ Create the edge list for a mesh.
 Entry:
   mesh - mesh to create edges of
 ******************************************************************************/
-
-create_edge_list(mesh)
-Mesh* mesh;
+void create_edge_list(Mesh* mesh)
 {
-    int i, j, k;
+    int i, k;
     Vertex* v1, *v2;
     Triangle* tri;
-    int vcount[10];
     int abnormal;
     int num_adj;
     int nverts;
@@ -239,15 +230,12 @@ Link together edges on the boundary into edge loops.
 Entry:
   mesh - mesh to make loops for
 ******************************************************************************/
-
-make_edge_loops(mesh)
-Mesh* mesh;
+void make_edge_loops(Mesh* mesh)
 {
     int i, j;
     EdgeLoop* list;
     Vertex* vert;
     Edge* e;
-    Vector pos;
 
     list = &mesh->looplist;
     list->nloops = 0;
@@ -277,12 +265,6 @@ Mesh* mesh;
             /* check to make sure we found an un-used edge */
             if (!found) {
                 fprintf(stderr, "make_edge_loops: can't find un-used edge\n");
-
-#if 1
-                init_extra_lines();
-                mesh_to_world(mesh->parent_scan, vert->coord, pos);
-                add_extra_line(pos, pos, 0x00ff00);
-#endif
 
                 printf("vert = %d, count = %d, nedges = %d\n",
                        vert->index, vert->count, vert->nedges);
@@ -337,17 +319,12 @@ Entry:
   e_orig - edge to start the loop with
   num    - number of this loop
 ******************************************************************************/
-
-follow_edges(mesh, e_orig, num)
-Mesh* mesh;
-Edge* e_orig;
-int num;
+void follow_edges(Mesh* mesh, Edge* e_orig, int num)
 {
-    int i, j;
+    int i;
     Vertex* vert;
     Edge* e;
     Edge* e_next;
-    Vertex* v_next;
 
     e = e_orig;
     e->num = num;
@@ -402,24 +379,19 @@ int num;
     } while (e != e_orig);
 }
 
-
 /******************************************************************************
 Swap the order of the vertices in an edge.
 
 Entry:
   e - edge in which to swap vertices
 ******************************************************************************/
-
-swap_verts_in_edge(e)
-Edge* e;
+void swap_verts_in_edge(Edge* e)
 {
     Vertex* vert;
-
     vert = e->v1;
     e->v1 = e->v2;
     e->v2 = vert;
 }
-
 
 /******************************************************************************
 Add an edge to the list of edges of a mesh.
@@ -428,10 +400,7 @@ Entry:
   mesh  - mesh to add edges to
   v1,v2 - vertices of the edge to add
 ******************************************************************************/
-
-add_edge_to_mesh(mesh, v1, v2)
-Mesh* mesh;
-Vertex* v1, *v2;
+void add_edge_to_mesh(Mesh* mesh, Vertex* v1, Vertex* v2)
 {
     Edge* e;
     int i, j;
@@ -479,7 +448,6 @@ Vertex* v1, *v2;
     v2->edges[v2->nedges++] = e;
 
     /* determine which triangle this edge belongs to */
-
     found = 0;
     for (i = 0; i < v1->ntris; i++) {
         for (j = 0; j < 3; j++) {
@@ -496,8 +464,7 @@ Vertex* v1, *v2;
                 } else if (tri->verts[(j + 2) % 3] == v1) {
                     ; /* do nothing */
                 } else {
-                    fprintf(stderr,
-                            "add_edge_to_mesh: couldn't find vertex in triangle\n");
+                    fprintf(stderr, "add_edge_to_mesh: couldn't find vertex in triangle\n");
                 }
                 break;
             }
@@ -516,7 +483,6 @@ Vertex* v1, *v2;
 /******************************************************************************
 Zipper together a model.
 ******************************************************************************/
-
 void new_zipper_proc()
 {
     join_loops(scans[1], scans[0]);
@@ -529,14 +495,12 @@ Join boundary loops from two meshes together.
 Entry:
   sc1,sc2 - scans containing the two meshes
 ******************************************************************************/
-
-join_loops(sc1, sc2)
-Scan* sc1, *sc2;
+void join_loops(Scan* sc1, Scan* sc2)
 {
-    int i, j;
+    int i;
     Mesh* m1, *m2;
-    EdgeLoop* list1, *list2;
-    Edge* e, *e_next, *e_orig;
+    EdgeLoop* list1;
+    Edge* e, *e_orig;
     NearPosition near_info;
     Vector pos, norm;
     int result;
@@ -556,7 +520,6 @@ Scan* sc1, *sc2;
         create_edge_list(m2);
 
     list1 = &m1->looplist;
-    list2 = &m2->looplist;
 
     /* mark all vertices from both meshes as untouched */
 
@@ -620,16 +583,9 @@ Entry:
   v1,v2   - vertices from first and second mesh
   e1      - edge from first mesh
 ******************************************************************************/
-
-follow_loops(sc1, sc2, m1, m2, v1, v2, e1)
-Scan* sc1, *sc2;
-Mesh* m1, *m2;
-Vertex* v1, *v2;
-Edge* e1;
+void follow_loops(Scan* sc1, Scan* sc2, Mesh* m1, Mesh* m2, Vertex* v1, Vertex* v2, Edge* e1)
 {
-    int i, j;
-    EdgeLoop* list1, *list2;
-    int num1, num2;
+    int num2;
     Edge* e;
     int still_adjacent;
     int result;
@@ -642,10 +598,6 @@ Edge* e1;
 
     inc = level_to_inc(mesh_level);
 
-    list1 = &m1->looplist;
-    list2 = &m2->looplist;
-
-    num1 = v1->edges[0]->num;
     num2 = v2->edges[0]->num;
 
     /* follow the first loop down the "next" chain */

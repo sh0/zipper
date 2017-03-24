@@ -39,6 +39,21 @@ static int debug_cut_count = 0;
 #define CUT       3
 #define USED_CUT  4
 
+void intersect_meshes(Scan* sc1, Scan* sc2);
+void finish_intersect_meshes(Scan* sc1, Scan* sc2);
+void mark_intersected_tris(Scan* sc1, Scan* sc2);
+void intersect_edge_with_near_tris(Vertex* v1, Vertex* v2, Triangle* cut_tri, Scan* sc1, Scan* sc2);
+void verts_near_vert(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float radius);
+void new_tri_intersection(
+    Vertex* v1, Vertex* v2, int share_count,
+    Triangle* near_tri, Triangle* cut_tri, Vector pos,
+    float t, int inward, float dot
+);
+void init_tri_intersection(Triangle* tri);
+void add_intersect_points(Scan* sc1, Scan* sc2);
+void perform_intersect_clipping(Scan* sc1, Scan* sc2);
+int between_cuts(Triangle* tri, Clip_List* clist, int in_vert, int out_vert, Vertex* between_list[]);
+int tri_cut_by_tri(Triangle* tri1, Triangle* tri2, Cut* cuts[], Triangle* tris[]);
 
 /******************************************************************************
 Intersect one mesh with another.
@@ -47,19 +62,14 @@ Entry:
   sc1 - first mesh
   sc2 - second mesh
 ******************************************************************************/
-
-intersect_meshes(sc1, sc2)
-Scan* sc1, *sc2;
+void intersect_meshes(Scan* sc1, Scan* sc2)
 {
-    int i, j;
+    int i;
     Mesh* m1, *m2;
-    Vertex* vert;
     Triangle* tri;
 
     m1 = sc1->meshes[mesh_level];
     m2 = sc2->meshes[mesh_level];
-
-    init_extra_lines();
 
 #if 1
     /* set all vertex colors to neutral */
@@ -107,7 +117,6 @@ Scan* sc1, *sc2;
     }
 }
 
-
 /******************************************************************************
 Finish the mesh intersection.
 
@@ -115,19 +124,8 @@ Entry:
   sc1 - first mesh
   sc2 - second mesh
 ******************************************************************************/
-
-finish_intersect_meshes(sc1, sc2)
-Scan* sc1, *sc2;
+void finish_intersect_meshes(Scan* sc1, Scan* sc2)
 {
-    int i, j;
-    Mesh* m1, *m2;
-    Vertex* vert;
-    Triangle* tri;
-
-    m1 = sc1->meshes[mesh_level];
-    m2 = sc2->meshes[mesh_level];
-
-
     /* comment this out if we're also doing a "merge" */
     /* comment this out if we're also doing a "merge" */
     /* comment this out if we're also doing a "merge" */
@@ -151,7 +149,6 @@ Scan* sc1, *sc2;
     perform_intersect_clipping(sc1, sc2);
 }
 
-
 /******************************************************************************
 Mark which triangles of one mesh intersect with triangles of another.  We
 will later do the actual clipping of the triangles.
@@ -159,13 +156,10 @@ will later do the actual clipping of the triangles.
 Entry:
   sc1,sc2 - scans containing the meshes
 ******************************************************************************/
-
-mark_intersected_tris(sc1, sc2)
-Scan* sc1, *sc2;
+void mark_intersected_tris(Scan* sc1, Scan* sc2)
 {
     int i, j;
     Mesh* m1, *m2;
-    Vertex* vert;
     Triangle* tri;
     float max_length;
     float edge_length_max();
@@ -224,11 +218,8 @@ Scan* sc1, *sc2;
                 printf("number of cuts: %d\n", n);
         }
 #endif
-
     }
-
 }
-
 
 /******************************************************************************
 Intersect an edge with all the triangles used by the nearby points collected
@@ -240,27 +231,21 @@ Entry:
   sc1     - mesh that v1 and v2 are from
   sc2     - mesh that the points in pts_near come from
 ******************************************************************************/
-
-intersect_edge_with_near_tris(v1, v2, cut_tri, sc1, sc2)
-Vertex* v1, *v2;
-Triangle* cut_tri;
-Scan* sc1, *sc2;
+void intersect_edge_with_near_tris(Vertex* v1, Vertex* v2, Triangle* cut_tri, Scan* sc1, Scan* sc2)
 {
     int i, j, k;
     Vertex* vert;
     Triangle* tri;
-    Vector pos, pos_world;
+    Vector pos;
     float t;
     int inward;
     int result;
     float dot;
-    Vector norm;
     int share_count;
     int found;
     int index;
     Triangle* shared_triangle();
     Vector coord1, coord2;
-    float col;
     Vector ct_norm;
     Vector temp_norm;
 
@@ -330,10 +315,6 @@ Scan* sc1, *sc2;
     if (cut_tri->clips[index].done_edge == 1)
         return;
 
-    /* jump point */
-we_are_okay:
-    ;
-
     /* mark the edge in question as "examined" in each triangle that it shares */
     for (i = 0; i < share_count; i++) {
 
@@ -391,9 +372,6 @@ we_are_okay:
 
             /* save away info on an intersection, if there was one */
             if (result) {
-                mesh_to_world(sc2, pos, pos_world);
-                add_extra_line(pos_world, pos_world, 0x00ff00);
-
 #if 0
                 col = dot;
                 if (col > 1)
@@ -406,11 +384,6 @@ we_are_okay:
 #endif
 
                 /* record information about this intersection */
-
-#if 0
-                printf("dot = %f\n", dot);
-#endif
-
                 new_tri_intersection(v1, v2, share_count,
                                      tri, cut_tri, pos, t, inward, dot);
             }
@@ -439,24 +412,15 @@ Entry:
 Exit:
   places nearby vertices in "pts_near"
 ******************************************************************************/
-
-verts_near_vert(mesh, not_mesh, pnt, norm, radius)
-Mesh* mesh;
-Mesh* not_mesh;
-Vector pnt;
-Vector norm;
-float radius;
+void verts_near_vert(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float radius)
 {
-    int i;
     int a, b, c;
     int aa, bb, cc;
     int index;
     Hash_Table* table = mesh->table;
     Vertex* ptr;
-    Vertex* min_ptr = NULL;
     float dx, dy, dz;
     float dist;
-    float dot;
 
     /* allocate room to keep nearby points */
     if (pts_near == NULL) {
@@ -544,18 +508,12 @@ Entry:
   inward      - direction that the edge passed through (0 or 1)
   dot         - dot product between the two triangles
 ******************************************************************************/
-
-new_tri_intersection(v1, v2, share_count, near_tri, cut_tri, pos, t, inward, dot)
-Vertex* v1, *v2;
-int share_count;
-Triangle* near_tri;
-Triangle* cut_tri;
-Vector pos;
-float t;
-int inward;
-float dot;
-{
-    int i, j, k;
+void new_tri_intersection(
+    Vertex* v1, Vertex* v2, int share_count,
+    Triangle* near_tri, Triangle* cut_tri, Vector pos,
+    float t, int inward, float dot
+) {
+    int i, j;
     More_Tri_Stuff* more;
     Cut* cut;
     Triangle* tri;
@@ -586,7 +544,6 @@ float dot;
         t2->dont_touch = 1;
 
     /*** create a cut record ***/
-
     cut = (Cut*) malloc(sizeof(Cut));
     cut->v1 = v1;
     cut->v2 = v2;
@@ -597,9 +554,7 @@ float dot;
     cut->inward = inward;
     cut->dot = dot;
 
-
     /*** add this to the list of each triangle that shares this edge ***/
-
     for (i = 0; i < share_count; i++) {
 
         tri = shared_triangle(i);
@@ -649,7 +604,6 @@ float dot;
         clip->cut_num++;
     }
 
-
     /*** store a record of this cut in the triangle that was pierced ***/
 
     /* make sure there is a place to store this info */
@@ -667,11 +621,8 @@ float dot;
     more->cuts[more->cut_num] = cut;
     more->cut_num++;
 
-
     debug_cut_count++;
-
 }
-
 
 /******************************************************************************
 Initialize the cut list of a triangle.
@@ -679,9 +630,7 @@ Initialize the cut list of a triangle.
 Entry:
   tri - triangle to initialize
 ******************************************************************************/
-
-init_tri_intersection(tri)
-Triangle* tri;
+void init_tri_intersection(Triangle* tri)
 {
     More_Tri_Stuff* more;
 
@@ -695,19 +644,16 @@ Triangle* tri;
     more->clip_flag = 0;
 }
 
-
 /******************************************************************************
 Add new vertices to the mesh where intersections occured.
 
 Entry:
   sc1,sc2 - the two meshes that were intersected
 ******************************************************************************/
-
-add_intersect_points(sc1, sc2)
-Scan* sc1, *sc2;
+void add_intersect_points(Scan* sc1, Scan* sc2)
 {
     int i, j;
-    Mesh* m1, *m2;
+    Mesh* m1;
     Triangle* tri;
     More_Tri_Stuff* more;
     Cut* cut;
@@ -719,7 +665,6 @@ Scan* sc1, *sc2;
     int count = 0;
 
     m1 = sc1->meshes[mesh_level];
-    m2 = sc2->meshes[mesh_level];
 
     /* find all intersection points by looking at the list of cut */
     /* points that are stored at each triangle */
@@ -765,19 +710,16 @@ Scan* sc1, *sc2;
     printf("%d new vertices added\n", count);
 }
 
-
 /******************************************************************************
 Perform the actual clipping of intersection triangles.
 
 Entry:
   sc1,sc2 - the two meshes that were intersected
 ******************************************************************************/
-
-perform_intersect_clipping(sc1, sc2)
-Scan* sc1, *sc2;
+void perform_intersect_clipping(Scan* sc1, Scan* sc2)
 {
     int i, j, k;
-    Mesh* m1, *m2;
+    Mesh* m1;
     Triangle* tri;
     int cut_count;
     Clip_List* clist;
@@ -788,15 +730,12 @@ Scan* sc1, *sc2;
     int self_intersect;
     int p1, p2, p3;
     Vector vec;
-    Triangle* ntri;
-    Cut* cut;
     More_Tri_Stuff* more;
     static Vertex* between_list[30];
     int between_count;
     Vertex** cv;
 
     m1 = sc1->meshes[mesh_level];
-    m2 = sc2->meshes[mesh_level];
 
     /* find all intersection points by looking at the list of cut */
     /* points that are stored at each triangle */
@@ -920,7 +859,7 @@ Scan* sc1, *sc2;
             for (j = 0; j < get_ntris(); j++) {
                 get_triangle(j, &p1, &p2, &p3);
                 if (check_proposed_tri(cv[p1], cv[p2], cv[p3])) {
-                    ntri = make_triangle(m1, cv[p1], cv[p2], cv[p3], 1e20);
+                    make_triangle(m1, cv[p1], cv[p2], cv[p3], 1e20);
                 }
             }
 
@@ -935,11 +874,8 @@ Scan* sc1, *sc2;
         /* free up the vertex list "clip_verts" ??? */
         /* free up the vertex list "clip_verts" ??? */
         /* free up the vertex list "clip_verts" ??? */
-
     }
-
 }
-
 
 /******************************************************************************
 Find which vertices should be strung between two cut points of a triangle
@@ -955,20 +891,11 @@ Exit:
   between_list - list of vertices at the cut points that we're finding
   returns number of elements in between_list
 ******************************************************************************/
-
-int between_cuts(tri, clist, in_vert, out_vert, between_list)
-Triangle* tri;
-Clip_List* clist;
-int in_vert;
-int out_vert;
-Vertex* between_list[];
+int between_cuts(Triangle* tri, Clip_List* clist, int in_vert, int out_vert, Vertex* between_list[])
 {
-    int i, j;
-    Vertex* v1, *v2;
+    int i;
     Clip_Vertex* v = clist->list;
-    int count;
     More_Tri_Stuff* more;
-    Cut* cut;
     Cut* cut1, *cut2;
     Triangle* tri_first, *tri_last;
     Cut* cut_list[10];
@@ -982,8 +909,6 @@ Vertex* between_list[];
 
     cut1 = v[in_vert].cut;
     cut2 = v[out_vert].cut;
-    v1 = v[in_vert].vert;
-    v2 = v[out_vert].vert;
 
     more = tri->more;
     if (more == NULL || more->cut_num == 0)
@@ -1047,7 +972,6 @@ Vertex* between_list[];
     return (chain_count);
 }
 
-
 /******************************************************************************
 Did an edge from one triangle (tri2) intersect another triangle (tri1)?
 If so, return the cut place(s).
@@ -1061,11 +985,7 @@ Exit:
   tris - list of triangles that share the cut edges with tri2
   returns number of such intersections
 ******************************************************************************/
-
-int tri_cut_by_tri(tri1, tri2, cuts, tris)
-Triangle* tri1, *tri2;
-Cut* cuts[];
-Triangle* tris[];
+int tri_cut_by_tri(Triangle* tri1, Triangle* tri2, Cut* cuts[], Triangle* tris[])
 {
     int i, j;
     Clipped_Edge* clips, *clip;
@@ -1109,4 +1029,3 @@ Triangle* tris[];
     /* return the number of matching cuts found */
     return (cut_count);
 }
-

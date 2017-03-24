@@ -29,67 +29,51 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include "zipper.h"
 #include "raw.h"
 
+// Parameters
 static int CONF_EDGE_ZERO;
 static float CONF_EDGE_COUNT_FACTOR;
 static float CONF_ANGLE;
 static float CONF_EXPONENT;
 
-
-set_conf_edge_count_factor(factor)
-float factor;
+void set_conf_edge_count_factor(float factor)
 {
     CONF_EDGE_COUNT_FACTOR = factor;
 }
 
-
-float
-get_conf_angle()
+float get_conf_angle()
 {
     return CONF_ANGLE;
 }
 
-
-set_conf_angle(factor)
-float factor;
+void set_conf_angle(float factor)
 {
     CONF_ANGLE = factor;
 }
 
-
-float
-get_conf_exponent()
+float get_conf_exponent()
 {
     return CONF_EXPONENT;
 }
 
-
-set_conf_exponent(factor)
-float factor;
+void set_conf_exponent(float factor)
 {
     CONF_EXPONENT = factor;
 }
 
-
-float
-get_conf_edge_count_factor()
+float get_conf_edge_count_factor()
 {
     return CONF_EDGE_COUNT_FACTOR;
 }
 
-
-set_conf_edge_zero(set)
-int set;
+void set_conf_edge_zero(int set)
 {
     CONF_EDGE_ZERO = set != 0;
 }
 
-
-int
-get_conf_edge_zero()
+int get_conf_edge_zero()
 {
     return CONF_EDGE_ZERO;
 }
-
 
 /******************************************************************************
 Place into a scan a newly-created triangle mesh of a given vertex spacing.
@@ -121,9 +105,9 @@ int level;
         assert(0);
         //mesh = make_mesh(sc, level, TABLE_DIST * level_to_inc(level));
     else if (sc->file_type == RAWFILE)
-        mesh = make_mesh_raw(sc, level, TABLE_DIST * level_to_inc(level));
+        mesh = make_mesh_raw(sc, level, 2.0f * get_zipper_resolution() * level_to_inc(level));
     else if (sc->file_type == PLYRANGEFILE)
-        mesh = make_mesh_ply(sc, level, TABLE_DIST * level_to_inc(level));
+        mesh = make_mesh_ply(sc, level, 2.0f * get_zipper_resolution() * level_to_inc(level));
     else {
         printf("create_scan_mesh: wrong file type\n");
         return;
@@ -998,10 +982,7 @@ Exit:
   returns pointer to newly-created triangle, or NULL if triangle was too big
 ******************************************************************************/
 
-Triangle* make_triangle(mesh, vt1, vt2, vt3, max_len)
-Mesh* mesh;
-Vertex* vt1, *vt2, *vt3;
-float max_len;
+Triangle* make_triangle(Mesh* mesh, Vertex* vt1, Vertex* vt2, Vertex* vt3, float max_len)
 {
     int i, j;
     Triangle* tri;

@@ -49,21 +49,9 @@ static FillTri** ftris = NULL;
 static int num_ftris = 0;
 static int max_ftris = 50;
 
+// Parameters
 static float FILL_EDGE_LENGTH_FACTOR;
 static float FILL_EDGE_LENGTH;
-
-void better_fill_loop(int loop, Scan* scan);
-int fix_fill_size(int loop, Scan* scan, float max_len, float* size);
-int maybe_split_edge(Triangle* tri, Scan* scan, int idx1, int idx2);
-void init_fill_lists();
-void new_ftri(Triangle* tri);
-void delete_ftri(FillTri* ftri);
-void new_fvert(Vertex* vert, int on_edge, Vertex* v1, Vertex* v2);
-void fill_tri_split2(FillTri* ftri, Mesh* mesh, int index);
-void fill_tri_split3(FillTri* ftri, Mesh* mesh, int index);
-void fill_tri_split4(FillTri* ftri, Mesh* mesh, int index);
-void smooth_hole_vertices(Scan* scan);
-void swap_hole_edges(Scan* sc);
 
 void update_fill_resolution()
 {
@@ -80,6 +68,19 @@ float get_fill_edge_length_factor()
 {
     return FILL_EDGE_LENGTH_FACTOR;
 }
+
+void better_fill_loop(int loop, Scan* scan);
+int fix_fill_size(int loop, Scan* scan, float max_len, float* size);
+int maybe_split_edge(Triangle* tri, Scan* scan, int idx1, int idx2);
+void init_fill_lists();
+void new_ftri(Triangle* tri);
+void delete_ftri(FillTri* ftri);
+void new_fvert(Vertex* vert, int on_edge, Vertex* v1, Vertex* v2);
+void fill_tri_split2(FillTri* ftri, Mesh* mesh, int index);
+void fill_tri_split3(FillTri* ftri, Mesh* mesh, int index);
+void fill_tri_split4(FillTri* ftri, Mesh* mesh, int index);
+void smooth_hole_vertices(Scan* scan);
+void swap_hole_edges(Scan* sc);
 
 /******************************************************************************
 Fill in a loop of a mesh.
@@ -102,7 +103,6 @@ void better_fill_loop(int loop, Scan* scan)
     int p1, p2, p3;
     Vector norm;
     Vector vec;
-    Triangle* make_triangle();
     Triangle* new_tri;
     Vertex* vert;
     int num;

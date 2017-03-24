@@ -25,24 +25,15 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include "zipper.h"
 #include "matrix.h"
 
-int draw_during_ops = 1;        /* draw during various operations? */
+static float global_near_dist; /* for passing to mark_for_eating */
 
-extern Scan* match_from[];
-extern Scan* match_to[];
-extern int num_drag[];
-extern int num_matches;
-extern int processes_forked;
-extern int parallel_procs_max;
-
-static float global_near_dist;        /* for passing to mark_for_eating */
-
+// Parameters
 static float EAT_NEAR_COS;
 static float EAT_NEAR_DIST_FACTOR;
 static float EAT_NEAR_DIST;
 static int EAT_START_ITERS;
 static float EAT_START_FACTOR;
 static float EAT_START_DIST;
-
 
 void update_eat_resolution()
 {
@@ -156,28 +147,11 @@ Eat away at the edges of two meshes where they are aligned.
 ******************************************************************************/
 void eat_edge_proc()
 {
-    int i;
-    extern float time_it();
-    float time;
-
-    time = time_it();
-
-    if (num_matches == 0) {
-        if (scans[0] != NULL && scans[1] != NULL)
-            eat_edge_pair(scans[0], scans[1]);
-        else {
-            printf("Cannot merge scans.\n");
-        }
-    } else
-        for (i = 0; i < num_matches; i++)
-            eat_edge_pair(match_to[i], match_from[i]);
-
-    /*
-      printf ("done eating edges\n");
-    */
-
-    time = time_it();
-    printf("time: %.3f\n", time);
+    if (scans[0] != NULL && scans[1] != NULL)
+        eat_edge_pair(scans[0], scans[1]);
+    else {
+        printf("Cannot merge scans.\n");
+    }
 }
 
 /******************************************************************************
@@ -236,10 +210,6 @@ Scan* sc1, *sc2;
             num1 = eat_mesh_edges(sc1, sc2, 0, 0, 1, EAT_NEAR_DIST);
         if (num2)
             num2 = eat_mesh_edges(sc2, sc1, 0, 0, 1, EAT_NEAR_DIST);
-    }
-
-    if (processes_forked) {
-        processes_forked = 0;
     }
 
     done_eating(sc1);
@@ -380,13 +350,7 @@ float near_dist;
 
     global_near_dist = near_dist;
 
-#if 0
-    m_set_procs(parallel_procs_max);
-    m_fork(mark_for_eating, sc1, sc2, draw, conf, to_edge);
-    processes_forked = 1;
-#else
     mark_for_eating(sc1, sc2, draw, conf, to_edge);
-#endif
 
     /* update the list of triangles to be examined */
     for (i = m2->eat_list_num - 1; i >= 0; i--) {
@@ -575,16 +539,8 @@ Align edges of meshes.
 ******************************************************************************/
 void align_proc()
 {
-    int i;
-
-    if (num_matches == 0) {
-        zipper_meshes(scans[0], scans[1]);
-        fill_in_holes(scans[0], scans[1]);
-    } else
-        for (i = 0; i < num_matches; i++) {
-            zipper_meshes(match_from[i], match_to[i]);
-            fill_in_holes(match_from[i], match_to[i]);
-        }
+    zipper_meshes(scans[0], scans[1]);
+    fill_in_holes(scans[0], scans[1]);
 }
 
 /******************************************************************************

@@ -185,14 +185,12 @@ typedef struct Scan {       /* information about one depth scan */
 } Scan;
 
 /* file types for meshes */
-
-#define CYFILE        1
+#define CYFILE        1 // REMOVED
 #define POLYFILE      2
 #define RAWFILE       3
 #define PLYRANGEFILE  4
 
 /* near position on another mesh */
-
 #define NEAR_VERTEX   1
 #define NEAR_EDGE     2
 #define NEAR_TRIANGLE 3
@@ -208,30 +206,7 @@ typedef struct NearPosition {
     float b1, b2, b3;             /* weights of vertices defining intersection */
 } NearPosition;
 
-#define SCAN_MAX 200
-
-/* list of scans */
-extern Scan* scans[];
-extern int nscans;
-
-/* mesh display level */
-extern int mesh_level;
-
-/* list of matches between vertices on one mesh and positions on another mesh */
-
-typedef struct Match {
-    Vector pos;       /* global position on first mesh */
-    Vector dir;           /* difference between corresponding positions */
-    float len;            /* length of this distance */
-    Vertex* vert;         /* the vertex on the first mesh */
-    float confidence; /* confidence about errors of the two positions */
-} Match;
-
-extern Match** pos_matches;
-extern int global_num_matches;
-
 /* Clipping Structures */
-
 typedef struct Clip_Vertex {
     unsigned char type;           /* mesh 1, 2 or cut vertex */
     unsigned char inward;         /* whether this segment points into mesh */
@@ -245,31 +220,22 @@ typedef struct Clip_List {
     int count;                    /* number of vertices in list */
 } Clip_List;
 
-/*** Distances ***/
-
-#define SPACING 0.005       /* distance between range samples */
-/* (5 mm) */
-#define NEAR_DIST (SPACING*2)   /* distance for nearest neighbor search */
-/* (x mm) */
-#define TABLE_DIST NEAR_DIST    /* distance for hash table */
-/* (x mm) */
-#define TRI_DIST (SPACING*4)    /* distance for triangle edges */
-/* (x mm) */
-#define CONSENSUS_DIST SPACING  /* distance for consensus geometry */
-/* (x mm) */
-#define FILL_DIST (TRI_DIST*0.5)/* max edge length for filling holes */
-/* (x mm) */
-
-/* typical allowed value for dot product between surfaces in */
-/* neighbor searches */
+/* typical allowed value for dot product between surfaces in neighbor searches */
 #define FIND_COS  0.3
 
-/* external routine declarations */
+// Mesh
+Triangle* make_triangle(Mesh* mesh, Vertex* vt1, Vertex* vt2, Vertex* vt3, float max_len);
 
-extern Triangle* make_triangle();
-
-// zipglobal
+// Globals
+extern Scan* scans[];
+extern int nscans;
 extern float ZIPPER_RESOLUTION;
 extern int mesh_level;
+
+// Parameters
+void update_edge_length_resolution();
+void set_max_edge_length_factor(float factor);
+float get_max_edge_length_factor();
+float get_zipper_resolution();
 
 #endif

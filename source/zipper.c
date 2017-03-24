@@ -28,16 +28,16 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #include "zipper.h"
 
-/* list of scans */
-Scan* scans[SCAN_MAX];
-int nscans = 0;
-
 int global_chew_count = 8;
 
-extern int move_num;
-extern Matrix rotmat;
-extern Matrix transmat;
+// Globals
+#define SCAN_MAX 200
+Scan* scans[SCAN_MAX];
+int nscans = 0;
+float ZIPPER_RESOLUTION = 0.0005; /* The "scale" of the system; formally SPACING. */
+int mesh_level = 3; /* mesh display level */
 
+// Parameters
 float MAX_EDGE_LENGTH_FACTOR;
 float MAX_EDGE_LENGTH;
 
@@ -57,12 +57,6 @@ float get_max_edge_length_factor()
     return MAX_EDGE_LENGTH_FACTOR;
 }
 
-/* The "scale" of the system; formally SPACING. */
-float ZIPPER_RESOLUTION = 0.0005;
-
-/* mesh display level */
-int mesh_level = 3;
-
 float get_zipper_resolution()
 {
     return ZIPPER_RESOLUTION;
@@ -78,9 +72,6 @@ void init_resolution_parameters()
     set_conf_edge_zero(0);
     set_conf_angle(0);
     set_conf_exponent(1.0);
-
-    set_align_near_dist_factor(2.0);
-    set_align_near_cos(0.3);
 
     set_eat_near_dist_factor(2.0);
     set_eat_near_cos(-0.5);
@@ -108,12 +99,10 @@ void set_zipper_resolution(float res)
 
     update_edge_length_resolution();
     update_fill_resolution();
-    update_align_resolution();
     update_eat_resolution();
     update_clip_resolution();
     update_consensus_resolution();
 }
-
 
 /******************************************************************************
 Main routine.
@@ -153,7 +142,6 @@ Entry:
 Exit:
   returns number of range positions between vertices
 ******************************************************************************/
-
 int level_to_inc(int level)
 {
     switch (level) {
@@ -171,11 +159,9 @@ int level_to_inc(int level)
     }
 }
 
-
 /******************************************************************************
 Return maximum length allowed for a triangle of a given level.
 ******************************************************************************/
-
 float edge_length_max(int level)
 {
     float max_length;
@@ -183,138 +169,12 @@ float edge_length_max(int level)
 
     /* pick how far apart the mesh samples are, based on the level of */
     /* detail requested */
-
     inc = level_to_inc(level);
 
     /* compute maximum okay length of a triangle edge */
-
     max_length = MAX_EDGE_LENGTH * inc;
-
-    return (max_length);
+    return max_length;
 }
-
-/******************************************************************************
-Return the number of seconds since this routine was last called.
-Returns junk on first call.
-******************************************************************************/
-
-float time_it()
-{
-    static long int last_sec;
-    static long int last_usec;
-    long int sec;
-    long int usec;
-    struct timeval tp;
-    struct timezone tzp;
-    float time;
-
-    gettimeofday(&tp, &tzp);
-    sec = tp.tv_sec - last_sec;
-    usec = tp.tv_usec - last_usec;
-    last_sec = tp.tv_sec;
-    last_usec = tp.tv_usec;
-
-    if (usec < 0)
-        time = (sec - 1) + (usec + 1000000) / 1000000.0;
-    else
-        time = sec + usec / 1000000.0;
-
-    return (time);
-}
-
-
-/******************************************************************************
-Print the positions of all meshes.
-******************************************************************************/
-
-#if 0
-void print_positions(fp)
-FILE* fp;
-{
-    int i, j, k;
-    Quaternion quat;
-    Matrix mat;
-
-    /* print viewing parameters */
-    mat_to_quat(rotmat, quat);
-
-    fprintf(fp, "camera %g %g %g  %g %g %g %g\n",
-            transmat[3][0], transmat[3][1], transmat[3][2],
-            quat[0], quat[1], quat[2], quat[3]);
-
-    /* print quaternion version */
-
-    for (i = 0; i < nscans; i++) {
-        mat_to_quat(scans[i]->rotmat, quat);
-        if (scans[i]->file_type == POLYFILE)
-            fprintf(fp, "bpolygon ");
-        else if (scans[i]->file_type == RAWFILE)
-            fprintf(fp, "rmesh ");
-        else if (scans[i]->file_type == PLYRANGEFILE)
-            fprintf(fp, "bmesh ");
-        else
-            fprintf(fp, "mesh ");
-        fprintf(fp, "%s %g %g %g %g %g %g %g\n", scans[i]->name,
-                scans[i]->xtrans, scans[i]->ytrans, scans[i]->ztrans,
-                quat[0], quat[1], quat[2], quat[3]);
-    }
-    fprintf(fp, "\n");
-}
-#endif
-
-/******************************************************************************
-Print the positions of all meshes in matrix form.
-******************************************************************************/
-
-#if 0
-void print_mat_positions(fp)
-FILE* fp;
-{
-    int i, j, k;
-    Quaternion quat;
-    Matrix mat, imat;
-    float det;
-
-    /* print viewing parameters */
-    mat_to_quat(rotmat, quat);
-    fprintf(fp, "Number of meshes:  %d\n", nscans);
-    fprintf(fp, "camera %g %g %g  %g %g %g %g\n",
-            transmat[3][0], transmat[3][1], transmat[3][2],
-            quat[0], quat[1], quat[2], quat[3]);
-
-    /* print matrix version */
-
-    fprintf(fp, "\n");
-    for (i = 0; i < nscans; i++) {
-        fprintf(fp, "%s:\n", scans[i]->name);
-
-        /* compute the tranformation matrix */
-        mat_translate(mat, scans[i]->xtrans, scans[i]->ytrans, scans[i]->ztrans);
-        mat_mult(mat, mat, scans[i]->rotmat);
-
-        /* inverse of mat */
-        mat_copy(imat, mat);
-        det = mat_invert(imat);
-
-        fprintf(fp, "matrix:\n");
-        for (j = 0; j <= 3; j++) {
-            for (k = 0; k <= 3; k++)
-                fprintf(fp, "%f  ", mat[k][j]);
-            fprintf(fp, "\n");
-        }
-        fprintf(fp, "\n");
-
-        fprintf(fp, "inverse matrix:\n");
-        for (j = 0; j <= 3; j++) {
-            for (k = 0; k <= 3; k++)
-                fprintf(fp, "%f  ", imat[k][j]);
-            fprintf(fp, "\n");
-        }
-        fprintf(fp, "\n");
-    }
-    fprintf(fp, "\n");
-}
-#endif
 
 /******************************************************************************
 Create all the meshes for the current level of detail.

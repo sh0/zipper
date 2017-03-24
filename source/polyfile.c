@@ -203,7 +203,7 @@ char* filename;
     inc = guess_mesh_inc(mesh);
 
     /* initialize hash table for vertices in mesh */
-    init_table(mesh, TABLE_DIST * inc);
+    init_table(mesh, 2.0f * get_zipper_resolution() * inc);
 
     /* find the edges of the mesh */
     find_mesh_edges(mesh);
@@ -548,7 +548,7 @@ char* filename;
     inc = guess_mesh_inc(mesh);
 
     /* initialize hash table for vertices in mesh */
-    init_table(mesh, TABLE_DIST * inc);
+    init_table(mesh, 2.0f * get_zipper_resolution() * inc);
 
     /* find the edges of the mesh */
     find_mesh_edges(mesh);

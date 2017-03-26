@@ -25,36 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ZIPPER_MESHOPS_H
-#define ZIPPER_MESHOPS_H
+#ifndef ZIPPER_POLYFILE_H
+#define ZIPPER_POLYFILE_H
 
 // Internal
 #include "zipper.h"
 #include "matrix.h"
 
 // Declarations
-void absorb_transform(Scan* sc);
-void fix_bows(Scan* sc);
-int fill_bow(Mesh* mesh, Vertex* vert, Vertex* vin[], Vertex* vout[], int in_out_count);
-void split_triangle(Scan* sc, Triangle* tri, int index1, float t, Triangle** tri1, Triangle** tri2);
-void split_test(Scan* sc);
-int edges_shared_count(Vertex* v1, Vertex* v2);
-Triangle* shared_triangle(int index);
-void fill_small_holes(Scan* sc);
-void fill_hole(Mesh* mesh, Edge* edge, int edge_count);
-void fill_four_hole(Mesh* mesh, Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4);
-void remove_cut_vertices(Scan* scan);
-int remove_a_vertex(Scan* scan, Vertex* v);
-void remove_sliver_tris(Scan* scan, float fract);
-void remove_flat_verts(Scan* scan, float cos_max);
-void remove_bad_aspect_tris(Scan* scan, float max_aspect, float min_cos, int diff);
-void move_vertex(Vertex* v, Vector pos, Mesh* mesh);
-void remove_short_edges(Scan* scan, float fract);
-void collapse_edge(Mesh* mesh, Vertex* v1, Vertex* v2);
-void quarter_mesh(Scan* scan);
-int fill_loop(int loop, Scan* scan);
-void swap_edges(Scan* sc);
-void compute_smoothing(Vertex* v, Vector new_pos);
-void smooth_vertices(Scan* sc);
+void scan_to_file(Scan* scan, char* filename);
+int file_to_scan(char* filename);
+int guess_mesh_inc(Mesh* mesh);
+void write_bin_polyfile(Scan* scan, char* name);
+int read_bin_polyfile(char* filename);
+Scan* new_scan(char* name, int type);
 
 #endif

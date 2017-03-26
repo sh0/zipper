@@ -1,35 +1,38 @@
 /*
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Draw various objects.
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
+// External
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
-#include "zipper.h"
-
-int backface_tri(Triangle* tri, Matrix mat, Matrix timat);
-void mesh_to_world(Scan* sc, Vector invec, Vector outvec);
-void world_to_mesh(Scan* sc, Vector invec, Vector outvec);
-void world_to_mesh_normal(Scan* sc, Vector in_norm, Vector out_norm);
-void mesh_to_world_normal(Scan* sc, Vector in_norm, Vector out_norm);
+// Internal
+#include "draw.h"
 
 /******************************************************************************
 Say if a triangle is front or back facing.
@@ -55,14 +58,12 @@ int backface_tri(Triangle* tri, Matrix mat, Matrix timat)
     norm[Z] = -tri->cc;
     mat_apply(timat, norm);
 
-
     if (0) { // is_orthographic
         if (norm[Z] < 0)
             return (1);
         else
             return (0);
     };
-
 
     /* transform the centriod of the triangle */
     pnt[X] = (v[0]->coord[X] + v[1]->coord[X] + v[2]->coord[X]) * 0.333333;
@@ -71,7 +72,6 @@ int backface_tri(Triangle* tri, Matrix mat, Matrix timat)
     mat_apply(mat, pnt);
 
     dot = vdot(norm, pnt);
-
     if (dot > 0)
         return (1);
     else
@@ -93,9 +93,10 @@ void mesh_to_world(Scan* sc, Vector invec, Vector outvec)
     int i;
     Vector v;
 
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++) {
         v[i] = invec[X] * sc->rotmat[X][i] + invec[Y] * sc->rotmat[Y][i] +
                invec[Z] * sc->rotmat[Z][i];
+    }
 
     outvec[X] = v[X] + sc->xtrans;
     outvec[Y] = v[Y] + sc->ytrans;
@@ -121,9 +122,10 @@ void world_to_mesh(Scan* sc, Vector invec, Vector outvec)
     v[Y] = invec[Y] - sc->ytrans;
     v[Z] = invec[Z] - sc->ztrans;
 
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++) {
         outvec[i] = v[X] * sc->rotmat[i][X] + v[Y] * sc->rotmat[i][Y] +
                     v[Z] * sc->rotmat[i][Z];
+    }
 }
 
 /******************************************************************************
@@ -145,9 +147,10 @@ void world_to_mesh_normal(Scan* sc, Vector in_norm, Vector out_norm)
     v[Y] = in_norm[Y];
     v[Z] = in_norm[Z];
 
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++) {
         out_norm[i] = v[X] * sc->rotmat[i][X] + v[Y] * sc->rotmat[i][Y] +
                       v[Z] * sc->rotmat[i][Z];
+    }
 }
 
 /******************************************************************************
@@ -165,9 +168,10 @@ void mesh_to_world_normal(Scan* sc, Vector in_norm, Vector out_norm)
     int i;
     Vector v;
 
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++) {
         v[i] = in_norm[X] * sc->rotmat[X][i] + in_norm[Y] * sc->rotmat[Y][i] +
                in_norm[Z] * sc->rotmat[Z][i];
+    }
 
     out_norm[X] = v[X];
     out_norm[Y] = v[Y];

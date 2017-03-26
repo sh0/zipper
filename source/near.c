@@ -1,31 +1,40 @@
 /*
+ * Find nearby points of a mesh to a particular point.
+ *
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Find nearby points of a mesh to a particular point.
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
+// External
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "zipper.h"
-
-static int large_search_flag = 0;
-
+// Internal
+#include "near.h"
+#include "draw.h"
 
 /******************************************************************************
 Initialize a uniform spatial subdivision table.  This structure divides
@@ -36,10 +45,7 @@ Entry:
   mesh - mesh that contains points to place in table
   size - size of a cell
 ******************************************************************************/
-
-init_table(mesh, size)
-Mesh* mesh;
-float size;
+void init_table(Mesh* mesh, float size)
 {
     int i;
     int index;
@@ -82,7 +88,6 @@ float size;
     }
 }
 
-
 /******************************************************************************
 Add a vertex to it's hash table.
 
@@ -90,10 +95,7 @@ Entry:
   vert - vertex to add
   mesh - mesh to add to
 ******************************************************************************/
-
-add_to_hash(vert, mesh)
-Vertex* vert;
-Mesh* mesh;
+void add_to_hash(Vertex* vert, Mesh* mesh)
 {
     int index;
     int a, b, c;
@@ -113,7 +115,6 @@ Mesh* mesh;
     table->verts[index] = vert;
 }
 
-
 /******************************************************************************
 Remove a vertex from the hash table.
 
@@ -121,10 +122,7 @@ Entry:
   vert - vertex to remove from hash table
   mesh - mesh that vertex belongs to
 ******************************************************************************/
-
-remove_from_hash(vert, mesh)
-Vertex* vert;
-Mesh* mesh;
+void remove_from_hash(Vertex* vert, Mesh* mesh)
 {
     int index;
     int a, b, c;
@@ -175,7 +173,6 @@ Mesh* mesh;
     ptr->next = vert->next;
 }
 
-
 /******************************************************************************
 Find the nearest vertex in a mesh to a given position.
 
@@ -189,13 +186,7 @@ Entry:
 Exit:
   returns pointer to the nearest vertex
 ******************************************************************************/
-
-Vertex* find_nearest(mesh, not_mesh, pnt, norm, min_dot)
-Mesh* mesh;
-Mesh* not_mesh;
-Vector pnt;
-Vector norm;
-float min_dot;
+Vertex* find_nearest(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float min_dot)
 {
     int a, b, c;
     int aa, bb, cc;
@@ -255,7 +246,6 @@ float min_dot;
     return (min_ptr);
 }
 
-
 /******************************************************************************
 Hacked version of find_nearest() to search beyond the nearest hash cells.
 Find the nearest vertex in a mesh to a given position.
@@ -270,13 +260,7 @@ Entry:
 Exit:
   returns pointer to the nearest vertex
 ******************************************************************************/
-
-Vertex* large_find_nearest(mesh, not_mesh, pnt, norm, min_dot)
-Mesh* mesh;
-Mesh* not_mesh;
-Vector pnt;
-Vector norm;
-float min_dot;
+Vertex* large_find_nearest(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float min_dot)
 {
     int a, b, c;
     int aa, bb, cc;
@@ -296,7 +280,6 @@ float min_dot;
     cc = floor(table->scale * pnt[Z]);
 
     /* look at nine cells, centered at cell containing location */
-
     for (a = aa - width; a <= aa + width; a++)
         for (b = bb - width; b <= bb + width; b++)
             for (c = cc - width; c <= cc + width; c++) {
@@ -337,7 +320,6 @@ float min_dot;
     return (min_ptr);
 }
 
-
 /******************************************************************************
 Find the nearest vertex in a mesh to a given position.
 
@@ -352,13 +334,7 @@ Entry:
 Exit:
   returns pointer to the nearest vertex
 ******************************************************************************/
-
-Vertex* new_find_nearest(mesh, not_mesh, pnt, norm, max, min_dot)
-Mesh* mesh;
-Mesh* not_mesh;
-Vector pnt;
-Vector norm;
-float max, min_dot;
+Vertex* new_find_nearest(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float max, float min_dot)
 {
     int a, b, c;
     int aa, bb, cc;
@@ -375,8 +351,6 @@ float max, min_dot;
     aa = floor(table->scale * pnt[X]);
     bb = floor(table->scale * pnt[Y]);
     cc = floor(table->scale * pnt[Z]);
-
-
 
     width = ceil(max * table->scale - 1e-4);
 
@@ -420,18 +394,6 @@ float max, min_dot;
     return (min_ptr);
 }
 
-
-/******************************************************************************
-Kluge to search farther than nearest hash cellsd.
-******************************************************************************/
-
-use_large_search(boolean)
-int boolean;
-{
-    large_search_flag = boolean;
-}
-
-
 /******************************************************************************
 Find the nearest location on a mesh to a given position.  This nearest
 position can be at a vertex, on an edge or within a triangle of the mesh.
@@ -450,17 +412,11 @@ Exit:
           in global coordinates
   returns 1 if it found a near point, 0 if it couldn't find any near point
 ******************************************************************************/
-
-int nearest_on_mesh(sc, mesh, not_mesh, pos, norm, max, min_dot, near_info)
-Scan* sc;
-Mesh* mesh;
-Mesh* not_mesh;
-Vector pos;
-Vector norm;
-float max;
-float min_dot;
-NearPosition* near_info;
-{
+int nearest_on_mesh(
+    Scan* sc, Mesh* mesh, Mesh* not_mesh,
+    Vector pos, Vector norm, float max, float min_dot,
+    NearPosition* near_info
+) {
     Vector v;
     Vector tnorm;
     Vector near_pos;
@@ -468,8 +424,6 @@ NearPosition* near_info;
     Vertex* near, *near2;
     float min_dist;
     float edge_min_dist, tri_min_dist;
-    float nearest_on_tris();
-    float nearest_on_edges();
     int on_edge1, on_edge2;
     int near_type;
     Triangle* near_tri;
@@ -482,15 +436,7 @@ NearPosition* near_info;
     world_to_mesh_normal(sc, norm, tnorm);
 
     /* look for nearby vertex of mesh */
-
-#if 0
-    if (large_search_flag)
-        near = large_find_nearest(mesh, not_mesh, v, tnorm, min_dot);
-    else
-        near = find_nearest(mesh, not_mesh, v, tnorm, min_dot);
-#else
     near = new_find_nearest(mesh, not_mesh, v, tnorm, max, min_dot);
-#endif
 
     /* return now if there was no nearby vertex or if vertex has no triangles */
     if ((near == NULL) || (near->ntris == 0)) {
@@ -570,7 +516,6 @@ NearPosition* near_info;
     return (0);
 }
 
-
 /******************************************************************************
 Find the nearest location on a group of edges of a vertex to a given
 position.
@@ -589,17 +534,10 @@ Exit:
   returns distance to nearby position if it found a near point, max if it
   couldn't find any near point
 ******************************************************************************/
-
-float nearest_on_edges(pos, near, max, near_pos, on_edge, near2, conf, ival)
-Vector pos;
-Vertex* near;
-float max;
-Vector near_pos;
-int* on_edge;
-Vertex** near2;
-float* conf;
-float* ival;
-{
+float nearest_on_edges(
+    Vector pos, Vertex* near, float max, Vector near_pos,
+    int* on_edge, Vertex** near2, float* conf, float* ival
+) {
     int i;
     Vector p, q;
     Vector dir;
@@ -654,7 +592,6 @@ float* ival;
     return (max);
 }
 
-
 /******************************************************************************
 Find the nearest location on a group of triangles of a vertex to a given
 position.
@@ -672,16 +609,10 @@ Exit:
   returns distance to nearby position if it found a near point, max if it
   couldn't find any near point
 ******************************************************************************/
-
-float nearest_on_tris(pos, near, max, near_pos, near_tri, conf, barycentric)
-Vector pos;
-Vertex* near;
-float max;
-Vector near_pos;
-Triangle** near_tri;
-float* conf;
-Vector barycentric;
-{
+float nearest_on_tris(
+    Vector pos, Vertex* near, float max, Vector near_pos,
+    Triangle** near_tri, float* conf, Vector barycentric
+) {
     int i;
     Triangle* tri;
     float r1, r2, r3;
@@ -730,10 +661,7 @@ Vector barycentric;
     return (max);
 }
 
-
-int
-is_near_edge(near)
-NearPosition* near;
+int is_near_edge(NearPosition* near)
 {
     int is_near;
     Vertex* v;
@@ -759,10 +687,7 @@ NearPosition* near;
     return is_near;
 }
 
-
-int
-is_vertex_near_edge(v)
-Vertex* v;
+int is_vertex_near_edge(Vertex* v)
 {
     int i, is_near;
 
@@ -774,4 +699,3 @@ Vertex* v;
 
     return is_near;
 }
-

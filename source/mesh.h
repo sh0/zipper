@@ -25,36 +25,46 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ZIPPER_MESHOPS_H
-#define ZIPPER_MESHOPS_H
+#ifndef ZIPPER_MESH_H
+#define ZIPPER_MESH_H
 
 // Internal
 #include "zipper.h"
 #include "matrix.h"
 
+// Parameters
+void set_conf_edge_count_factor(float factor);
+float get_conf_angle();
+void set_conf_angle(float factor);
+float get_conf_exponent();
+void set_conf_exponent(float factor);
+float get_conf_edge_count_factor();
+void set_conf_edge_zero(int set);
+int get_conf_edge_zero();
+
 // Declarations
-void absorb_transform(Scan* sc);
-void fix_bows(Scan* sc);
-int fill_bow(Mesh* mesh, Vertex* vert, Vertex* vin[], Vertex* vout[], int in_out_count);
-void split_triangle(Scan* sc, Triangle* tri, int index1, float t, Triangle** tri1, Triangle** tri2);
-void split_test(Scan* sc);
-int edges_shared_count(Vertex* v1, Vertex* v2);
-Triangle* shared_triangle(int index);
-void fill_small_holes(Scan* sc);
-void fill_hole(Mesh* mesh, Edge* edge, int edge_count);
-void fill_four_hole(Mesh* mesh, Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4);
-void remove_cut_vertices(Scan* scan);
-int remove_a_vertex(Scan* scan, Vertex* v);
-void remove_sliver_tris(Scan* scan, float fract);
-void remove_flat_verts(Scan* scan, float cos_max);
-void remove_bad_aspect_tris(Scan* scan, float max_aspect, float min_cos, int diff);
-void move_vertex(Vertex* v, Vector pos, Mesh* mesh);
-void remove_short_edges(Scan* scan, float fract);
-void collapse_edge(Mesh* mesh, Vertex* v1, Vertex* v2);
-void quarter_mesh(Scan* scan);
-int fill_loop(int loop, Scan* scan);
-void swap_edges(Scan* sc);
-void compute_smoothing(Vertex* v, Vector new_pos);
-void smooth_vertices(Scan* sc);
+void create_scan_mesh(Scan* sc, int level);
+Mesh* make_mesh_raw(Scan* sc, int level, float table_dist);
+Mesh* make_mesh_ply(Scan* sc, int level, float table_dist);
+void vertex_errors(Mesh* mesh, Scan* scan, int rot_flag, int mult);
+void lower_edge_confidence(Mesh* mesh, int level);
+void clear_mesh(Mesh* mesh);
+int make_vertex(Mesh* mesh, Vector vec);
+Triangle* make_triangle(Mesh* mesh, Vertex* vt1, Vertex* vt2, Vertex* vt3, float max_len);
+void delete_triangle(Triangle* tri, Mesh* mesh, int dverts);
+void remove_tri_from_vert(Vertex* vert, Triangle* tri, int num, Mesh* mesh, int dverts);
+void delete_vertex(Vertex* vert, Mesh* mesh);
+void remove_unused_verts(Mesh* mesh);
+int check_proposed_tri(Vertex* v1, Vertex* v2, Vertex* v3);
+int check_proposed_edge(Vertex* v1, Vertex* v2);
+void add_tri_to_vert(Vertex* vert, Triangle* tri);
+int set_triangle_geometry(Triangle* tri);
+int plane_thru_vectors(Vector v0, Vector v1, Vector v2, float* aa, float* bb, float* cc, float* dd);
+int compute_edge_planes(Triangle* tri);
+void find_vertex_normals(Mesh* mesh);
+void find_vertex_normal(Vertex* vert);
+void find_mesh_edges(Mesh* mesh);
+int vertex_edge_test(Vertex* vert);
+void clean_up_mesh(Scan* scan);
 
 #endif

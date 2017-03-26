@@ -1,41 +1,45 @@
 /*
+ * Keep track of edges of a mesh.
+ *
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Keep track of edges of a mesh.
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
+// External
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "zipper.h"
-#include "matrix.h"
+// Internal
+#include "edges.h"
+#include "mesh.h"
+#include "near.h"
+#include "draw.h"
 
-/* define either VERBOSE_EDGES or NO_VERBOSE_EDGES */
+// Define either VERBOSE_EDGES or NO_VERBOSE_EDGES
 #define NO_VERBOSE_EDGES
-
-void create_edge_list(Mesh* mesh);
-void make_edge_loops(Mesh* mesh);
-void follow_edges(Mesh* mesh, Edge* e_orig, int num);
-void swap_verts_in_edge(Edge* e);
-void add_edge_to_mesh(Mesh* mesh, Vertex* v1, Vertex* v2);
-void new_zipper_proc();
-void join_loops(Scan* sc1, Scan* sc2);
-void follow_loops(Scan* sc1, Scan* sc2, Mesh* m1, Mesh* m2, Vertex* v1, Vertex* v2, Edge* e1);
 
 /******************************************************************************
 Create the edge list for a mesh.

@@ -1,38 +1,34 @@
 /*
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Header for PLY polygon files.
+#ifndef ZIPPER_PLY_H
+#define ZIPPER_PLY_H
 
-- Greg Turk, March 1994
-
-A PLY file contains a single polygonal _object_.
-
-An object is composed of lists of _elements_.  Typical elements are
-vertices, faces, edges and materials.
-
-Each type of element for a given object has one or more _properties_
-associated with the element type.  For instance, a vertex element may
-have as properties three floating-point values x,y,z and three unsigned
-chars for red, green and blue.
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
-#ifndef __PLY_H__
-#define __PLY_H__
-
+// External
 #include <stdio.h>
 #include <stddef.h>
 
@@ -44,7 +40,6 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #define PLY_ERROR  -1           /* error in ply routine */
 
 /* scalar data types supported by PLY format */
-
 #define PLY_START_TYPE 0
 #define PLY_CHAR       1
 #define PLY_SHORT      2
@@ -59,9 +54,8 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #define  PLY_SCALAR  0
 #define  PLY_LIST    1
 
-
-typedef struct PlyProperty {    /* description of a property */
-
+// Description of a property
+typedef struct PlyProperty {
     char* name;                           /* property name */
     int external_type;                    /* file's data type */
     int internal_type;                    /* program's data type */
@@ -71,10 +65,10 @@ typedef struct PlyProperty {    /* description of a property */
     int count_external;                   /* file's count type */
     int count_internal;                   /* program's count type */
     int count_offset;                     /* offset byte for list count */
-
 } PlyProperty;
 
-typedef struct PlyElement {     /* description of an element */
+// Description of an element
+typedef struct PlyElement {
     char* name;                   /* element name */
     int num;                      /* number of elements in this object */
     int size;                     /* size of element (bytes) or -1 if variable */
@@ -85,30 +79,35 @@ typedef struct PlyElement {     /* description of an element */
     int other_size;               /* size of other_props structure */
 } PlyElement;
 
-typedef struct PlyOtherProp {   /* describes other properties in an element */
+// Describes other properties in an element
+typedef struct PlyOtherProp {
     char* name;                   /* element name */
     int size;                     /* size of other_props */
     int nprops;                   /* number of properties in other_props */
     PlyProperty** props;          /* list of properties in other_props */
 } PlyOtherProp;
 
-typedef struct OtherData { /* for storing other_props for an other element */
+// For storing other_props for an other element
+typedef struct OtherData {
     void* other_props;
 } OtherData;
 
-typedef struct OtherElem {     /* data for one "other" element */
+// Data for one "other" element
+typedef struct OtherElem {
     char* elem_name;             /* names of other elements */
     int elem_count;              /* count of instances of each element */
     OtherData** other_data;      /* actual property data for the elements */
     PlyOtherProp* other_props;   /* description of the property data */
 } OtherElem;
 
-typedef struct PlyOtherElems {  /* "other" elements, not interpreted by user */
+// "Other" elements, not interpreted by user
+typedef struct PlyOtherElems {
     int num_elems;                /* number of other elements */
     OtherElem* other_list;        /* list of data for other elements */
 } PlyOtherElems;
 
-typedef struct PlyFile {        /* description of PLY file */
+// Description of PLY file
+typedef struct PlyFile {
     FILE* fp;                     /* file pointer */
     int file_type;                /* ascii or binary */
     float version;                /* version number of file */
@@ -122,34 +121,33 @@ typedef struct PlyFile {        /* description of PLY file */
     PlyOtherElems* other_elems;   /* "other" elements from a PLY file */
 } PlyFile;
 
-/*** delcaration of routines ***/
-extern PlyFile* ply_write(FILE*, int, char**, int);
-extern PlyFile* ply_open_for_writing(char*, int, char**, int, float*);
-extern void ply_describe_element(PlyFile*, char*, int, int, PlyProperty*);
-extern void ply_describe_property(PlyFile*, char*, PlyProperty*);
-extern void ply_element_count(PlyFile*, char*, int);
-extern void ply_header_complete(PlyFile*);
-extern void ply_put_element_setup(PlyFile*, char*);
-extern void ply_put_element(PlyFile*, void*);
-extern void ply_put_comment(PlyFile*, char*);
-extern void ply_put_obj_info(PlyFile*, char*);
-extern PlyFile* ply_read(FILE*, int*, char***);
-extern PlyFile* ply_open_for_reading(char*, int*, char***, int*, float*);
-extern PlyProperty** ply_get_element_description(PlyFile*, char*, int*, int*);
-extern void ply_get_element_setup(PlyFile*, char*, int, PlyProperty*);
-extern void ply_get_property(PlyFile*, char*, PlyProperty*);
-extern PlyOtherProp* ply_get_other_properties(PlyFile*, char*, int);
-extern ply_get_element(PlyFile*, void*);
-extern char** ply_get_comments(PlyFile*, int*);
-extern char** ply_get_obj_info(PlyFile*, int*);
-extern void ply_close(PlyFile*);
-extern void ply_get_info(PlyFile*, float*, int*);
-extern PlyOtherElems* ply_get_other_element(PlyFile*, char*, int);
-extern void ply_describe_other_elements(PlyFile*, PlyOtherElems*);
-extern void ply_put_other_elements(PlyFile*);
-extern void ply_free_other_elements(PlyOtherElems*);
+// Declarations
+PlyFile* ply_write(FILE*, int, char**, int);
+PlyFile* ply_open_for_writing(char*, int, char**, int, float*);
+void ply_describe_element(PlyFile*, char*, int, int, PlyProperty*);
+void ply_describe_property(PlyFile*, char*, PlyProperty*);
+void ply_element_count(PlyFile*, char*, int);
+void ply_header_complete(PlyFile*);
+void ply_put_element_setup(PlyFile*, char*);
+void ply_put_element(PlyFile*, void*);
+void ply_put_comment(PlyFile*, char*);
+void ply_put_obj_info(PlyFile*, char*);
+PlyFile* ply_read(FILE*, int*, char***);
+PlyFile* ply_open_for_reading(char*, int*, char***, int*, float*);
+PlyProperty** ply_get_element_description(PlyFile*, char*, int*, int*);
+void ply_get_element_setup(PlyFile*, char*, int, PlyProperty*);
+void ply_get_property(PlyFile*, char*, PlyProperty*);
+PlyOtherProp* ply_get_other_properties(PlyFile*, char*, int);
+void ply_get_element(PlyFile*, void*);
+char** ply_get_comments(PlyFile*, int*);
+char** ply_get_obj_info(PlyFile*, int*);
+void ply_close(PlyFile*);
+void ply_get_info(PlyFile*, float*, int*);
+PlyOtherElems* ply_get_other_element(PlyFile*, char*, int);
+void ply_describe_other_elements(PlyFile*, PlyOtherElems*);
+void ply_put_other_elements(PlyFile*);
+void ply_free_other_elements(PlyOtherElems*);
 
-extern int equal_strings(char*, char*);
+int equal_strings(char*, char*);
 
-#endif /* !__PLY_H__ */
-
+#endif

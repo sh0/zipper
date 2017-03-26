@@ -1,59 +1,58 @@
 /*
+ * Intersect two meshes by clipping them against one another.
+ * Greg Turk, December 1993
+ *
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Intersect two meshes by clipping them against one another.
-
-Greg Turk, December 1993
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
+// External
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "zipper.h"
-#include "matrix.h"
+// Intermal
+#include "intersect.h"
+#include "mesh.h"
+#include "clip.h"
+#include "draw.h"
+#include "near.h"
+#include "triangulate.h"
+#include "meshops.h"
+#include "remove.h"
 
-/* set of points near the edge of a mesh */
+// Set of points near the edge of a mesh
 static Vertex** pts_near = NULL;
 static int pts_near_num;
 static int pts_near_max;
 
-static int debug_cut_count = 0;
-
+// Constants
 #define MESH_A    1
 #define MESH_B    2
 #define CUT       3
 #define USED_CUT  4
-
-void intersect_meshes(Scan* sc1, Scan* sc2);
-void finish_intersect_meshes(Scan* sc1, Scan* sc2);
-void mark_intersected_tris(Scan* sc1, Scan* sc2);
-void intersect_edge_with_near_tris(Vertex* v1, Vertex* v2, Triangle* cut_tri, Scan* sc1, Scan* sc2);
-void verts_near_vert(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float radius);
-void new_tri_intersection(
-    Vertex* v1, Vertex* v2, int share_count,
-    Triangle* near_tri, Triangle* cut_tri, Vector pos,
-    float t, int inward, float dot
-);
-void init_tri_intersection(Triangle* tri);
-void add_intersect_points(Scan* sc1, Scan* sc2);
-void perform_intersect_clipping(Scan* sc1, Scan* sc2);
-int between_cuts(Triangle* tri, Clip_List* clist, int in_vert, int out_vert, Vertex* between_list[]);
-int tri_cut_by_tri(Triangle* tri1, Triangle* tri2, Cut* cuts[], Triangle* tris[]);
 
 /******************************************************************************
 Intersect one mesh with another.
@@ -80,18 +79,13 @@ void intersect_meshes(Scan* sc1, Scan* sc2)
         m2->verts[i]->confidence = -1;
 #endif
 
-    debug_cut_count = 0;
-
     /* mark those tris in mesh 2 that are intersected by tris in mesh 1 */
     mark_intersected_tris(sc1, sc2);
 
     /* mark those tris in mesh 1 that are intersected by tris in mesh 2 */
     mark_intersected_tris(sc2, sc1);
 
-    printf("debug_cut_count = %d\n", debug_cut_count);
-
     /* have triangle colors reflect the dont_touch flag */
-
     for (i = 0; i < m1->ntris; i++) {
         tri = m1->tris[i];
         tri->mark = tri->dont_touch;
@@ -248,6 +242,7 @@ void intersect_edge_with_near_tris(Vertex* v1, Vertex* v2, Triangle* cut_tri, Sc
     Vector coord1, coord2;
     Vector ct_norm;
     Vector temp_norm;
+    Vector barycentric;
 
     /* get cut_tri's normal into mesh 2 coordinates */
     temp_norm[X] = -tri->aa;
@@ -367,8 +362,7 @@ void intersect_edge_with_near_tris(Vertex* v1, Vertex* v2, Triangle* cut_tri, Sc
                 continue;
 
             /* perform intersection */
-            result = line_intersect_tri_single(coord1, coord2, tri, pos, &t,
-                                               &inward);
+            result = line_intersect_tri_single(coord1, coord2, tri, pos, &t, &inward, barycentric);
 
             /* save away info on an intersection, if there was one */
             if (result) {
@@ -620,8 +614,6 @@ void new_tri_intersection(
     /* add to the list of cuts */
     more->cuts[more->cut_num] = cut;
     more->cut_num++;
-
-    debug_cut_count++;
 }
 
 /******************************************************************************

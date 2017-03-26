@@ -1,32 +1,42 @@
 /*
+ * Read and write ascii polygon files.
+ *
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Read and write ascii polygon files.
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
-#include <math.h>
+// External
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-#include "zipper.h"
-#include "matrix.h"
-
-Scan* new_scan(char*, int);
+// Internal
+#include "polyfile.h"
+#include "mesh.h"
+#include "near.h"
 
 /******************************************************************************
 Write the mesh of a scan to a file.
@@ -35,9 +45,7 @@ Entry:
   scan     - which scan to write
   filename - name of file to write to
 ******************************************************************************/
-scan_to_file(scan, filename)
-Scan* scan;
-char* filename;
+void scan_to_file(Scan* scan, char* filename)
 {
     int i;
     Mesh* mesh;
@@ -90,7 +98,6 @@ char* filename;
     fclose(fp);
 }
 
-
 /******************************************************************************
 Read a shared-vertex format polygon file into a scan.
 
@@ -100,9 +107,7 @@ Entry:
 Exit:
   returns 0 if file was read okay, 1 if not
 ******************************************************************************/
-
-int file_to_scan(filename)
-char* filename;
+int file_to_scan(char* filename)
 {
     int i, j;
     FILE* fp;
@@ -136,7 +141,6 @@ char* filename;
     sc = new_scan(name, POLYFILE);
 
     /* make one mesh */
-
     sc->meshes[mesh_level] = (Mesh*) malloc(sizeof(Mesh));
     mesh = sc->meshes[mesh_level];
 
@@ -144,12 +148,10 @@ char* filename;
     mesh->nverts = 0;
 
     /* read header information */
-
     result = fscanf(fp, "vertices: %d\n", &nverts);
     result = fscanf(fp, "faces: %d\n", &ntris);
 
     /* read in the vertices */
-
     mesh->nverts = 0;
     mesh->max_verts = nverts + 100;
     mesh->verts = (Vertex**) malloc(sizeof(Vertex*) * mesh->max_verts);
@@ -173,11 +175,8 @@ char* filename;
     }
 
     /* read in the faces */
-
     for (i = 0; i < ntris; i++) {
-
         /* get string describing face */
-
         fgets(str, 200, fp);
 
         result = sscanf(str, "f %d %d %d\n", &in1, &in2, &in3);
@@ -216,7 +215,6 @@ char* filename;
     return (0);
 }
 
-
 /******************************************************************************
 Take a guess at what mesh size this polygon file was created at.
 
@@ -226,9 +224,7 @@ Entry:
 Exit:
   returns number saying how many range data points are skipped between verts
 ******************************************************************************/
-
-int guess_mesh_inc(mesh)
-Mesh* mesh;
+int guess_mesh_inc(Mesh* mesh)
 {
     int i, j;
     float num = 100;
@@ -266,7 +262,6 @@ Mesh* mesh;
     return (inc);
 }
 
-
 /******************************************************************************
 Write the mesh of a scan to a binary polygon file.
 
@@ -274,10 +269,7 @@ Entry:
   scan     - which scan to write
   name - name of file to write to
 ******************************************************************************/
-
-write_bin_polyfile(scan, name)
-Scan* scan;
-char* name;
+void write_bin_polyfile(Scan* scan, char* name)
 {
     int i;
     FILE* fp;
@@ -358,7 +350,6 @@ char* name;
     fclose(fp);
 }
 
-
 /******************************************************************************
 Read a binary polygon file into a scan.
 
@@ -368,9 +359,7 @@ Entry:
 Exit:
   returns 0 if file was read okay, 1 if not
 ******************************************************************************/
-
-int read_bin_polyfile(filename)
-char* filename;
+int read_bin_polyfile(char* filename)
 {
     int i, j;
     FILE* fp;
@@ -400,18 +389,15 @@ char* filename;
         strcat(name, ".ply");
 
     fp = fopen(name, "r");
-
     if (fp == NULL) {
         printf("Couldn't open file '%s'\n", name);
         return (1);
     }
 
     printf("Reading polygons from '%s'\n", name);
-
     sc = new_scan(filename, POLYFILE);
 
     /* make one mesh */
-
     sc->meshes[mesh_level] = (Mesh*) malloc(sizeof(Mesh));
     mesh = sc->meshes[mesh_level];
 
@@ -419,7 +405,6 @@ char* filename;
     mesh->nverts = 0;
 
     /* read header information */
-
     fscanf(fp, "ply\n");
     fscanf(fp, "properties: %d\n", &nprops);
 
@@ -561,7 +546,6 @@ char* filename;
     return (0);
 }
 
-
 /******************************************************************************
 Create a new scan.
 
@@ -572,11 +556,11 @@ Entry:
 Exit:
   returns pointer to the new scan
 ******************************************************************************/
-
 Scan* new_scan(char* name, int type)
 {
-    int j, k;
+    int i, j, k;
     Scan* sc;
+    float theta;
 
     scans[nscans] = (Scan*) malloc(sizeof(Scan));
     sc = scans[nscans];
@@ -589,7 +573,16 @@ Scan* new_scan(char* name, int type)
     sc->ztrans = 0;
     sc->rotate = 0;
 
-    build_rotmat(sc);
+    // Build rotation matrix
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++)
+            sc->rotmat[i][j] = (i == j);
+    }
+    theta = - sc->rotate * M_PI / 180.0;
+    sc->rotmat[X][X] = cos(theta);
+    sc->rotmat[X][Z] = sin(theta);
+    sc->rotmat[Z][X] = -sin(theta);
+    sc->rotmat[Z][Z] = cos(theta);
 
     sc->draw_flag = 1;
     sc->edge_mesh = NULL;
@@ -607,4 +600,3 @@ Scan* new_scan(char* name, int type)
     /* return pointer to new scan */
     return (sc);
 }
-

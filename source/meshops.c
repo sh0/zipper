@@ -1,42 +1,52 @@
 /*
+ * Perform "fix-up" mesh operations.
+ * Greg Turk, September 1993
+ *
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Perform "fix-up" mesh operations.
-
-Greg Turk, September 1993
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
+// External
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
-#include "zipper.h"
-#include "matrix.h"
+// Internal
 #include "meshops.h"
+#include "mesh.h"
+#include "edges.h"
+#include "triangulate.h"
+#include "near.h"
 
+// Constants
 typedef enum {FALSE = 0, TRUE} boolean;
 
 /* really bad way to get triangles out of edges_shared_count() */
 static Triangle* tris_shared[10];
 
-
-absorb_transform(sc)
-Scan* sc;
+void absorb_transform(Scan* sc)
 {
     int i;
     Mesh* mesh;
@@ -59,16 +69,13 @@ Scan* sc;
     sc->ztrans = 0;
 }
 
-
 /******************************************************************************
 Fix up the bows at vertices (where a vertex has more than two unshared edges).
 
 Entry:
   sc - scan containing mesh to fix
 ******************************************************************************/
-
-fix_bows(sc)
-Scan* sc;
+void fix_bows(Scan* sc)
 {
     int i, j, k;
     Mesh* mesh;
@@ -209,7 +216,6 @@ Scan* sc;
     mesh->edges_valid = 0;
 }
 
-
 /******************************************************************************
 Fill in the smallest gap at bow with a triangle.
 
@@ -223,12 +229,7 @@ Entry:
 Exit:
   returns 1 if there was some problem, 0 if not
 ******************************************************************************/
-
-int fill_bow(mesh, vert, vin, vout, in_out_count)
-Mesh* mesh;
-Vertex* vert;
-Vertex* vin[], *vout[];
-int in_out_count;
+int fill_bow(Mesh* mesh, Vertex* vert, Vertex* vin[], Vertex* vout[], int in_out_count)
 {
     int i, j;
     int ii, jj;
@@ -337,7 +338,6 @@ int in_out_count;
     return (0);
 }
 
-
 /******************************************************************************
 Split a triangle along an edge to form two new triangles.
 
@@ -351,13 +351,7 @@ Entry:
 Exit:
   tri1,tri2 - pointers to the two newly created triangles
 ******************************************************************************/
-
-split_triangle(sc, tri, index1, t, tri1, tri2)
-Scan* sc;
-Triangle* tri;
-int index1;
-float t;
-Triangle** tri1, ** tri2;
+void split_triangle(Scan* sc, Triangle* tri, int index1, float t, Triangle** tri1, Triangle** tri2)
 {
     Mesh* mesh;
     int index2, index3;
@@ -405,16 +399,13 @@ Triangle** tri1, ** tri2;
     *tri2 = new2;
 }
 
-
 /******************************************************************************
 Test the triangle splitting routine.
 
 Entry:
   sc - scan containing triangles to split
 ******************************************************************************/
-
-split_test(sc)
-Scan* sc;
+void split_test(Scan* sc)
 {
     int i, j;
     Mesh* mesh;
@@ -426,7 +417,6 @@ Scan* sc;
     mesh = sc->meshes[mesh_level];
 
     /* split triangles at random */
-
     for (i = 0; i < 50; i++) {
         found = 0;
         do {
@@ -449,7 +439,6 @@ Scan* sc;
     }
 }
 
-
 /******************************************************************************
 Determine how many triangles share a pair of vertices.
 
@@ -460,9 +449,7 @@ Exit:
   returns number of edges shared
   side effect is to place shared triangles in the array tris_shared[]
 ******************************************************************************/
-
-int edges_shared_count(v1, v2)
-Vertex* v1, *v2;
+int edges_shared_count(Vertex* v1, Vertex* v2)
 {
     int i, j;
     int count = 0;
@@ -503,17 +490,13 @@ Vertex* v1, *v2;
     return (count);
 }
 
-
 /******************************************************************************
 Return the nth shared triangle.
 ******************************************************************************/
-
-Triangle* shared_triangle(index)
-int index;
+Triangle* shared_triangle(int index)
 {
     return (tris_shared[index]);
 }
-
 
 /******************************************************************************
 Fill in the small holes in a mesh with triangles.
@@ -521,9 +504,7 @@ Fill in the small holes in a mesh with triangles.
 Entry:
   sc - scan containing mesh to fix
 ******************************************************************************/
-
-fill_small_holes(sc)
-Scan* sc;
+void fill_small_holes(Scan* sc)
 {
     int i;
     Mesh* mesh;
@@ -598,7 +579,6 @@ Scan* sc;
     }
 }
 
-
 /******************************************************************************
 Fill in a small hole in a mesh.
 
@@ -607,11 +587,7 @@ Entry:
   edge       - one of the edges along the hole
   edge_count - number of edges around the hole
 ******************************************************************************/
-
-fill_hole(mesh, edge, edge_count)
-Mesh* mesh;
-Edge* edge;
-int edge_count;
+void fill_hole(Mesh* mesh, Edge* edge, int edge_count)
 {
     Vertex* v1, *v2, *v3, *v4;
 
@@ -646,7 +622,6 @@ int edge_count;
     }
 }
 
-
 /******************************************************************************
 Fill in a four-edged hole in a mesh.
 
@@ -654,10 +629,7 @@ Entry:
   mesh        - mesh in which there is a hole to fill
   v1,v2,v3,v4 - vertices around the hole
 ******************************************************************************/
-
-fill_four_hole(mesh, v1, v2, v3, v4)
-Mesh* mesh;
-Vertex* v1, *v2, *v3, *v4;
+void fill_four_hole(Mesh* mesh, Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4)
 {
     Vector dir1, dir2, dir3, dir4;
     float dot1, dot2, dot3, dot4;
@@ -704,16 +676,13 @@ Vertex* v1, *v2, *v3, *v4;
     find_vertex_normal(v4);
 }
 
-
 /******************************************************************************
 Remove the "cut" vertices from a mesh that were introduced during zippering.
 
 Entry:
   scan - scan containing the zippered mesh
 ******************************************************************************/
-
-remove_cut_vertices(scan)
-Scan* scan;
+void remove_cut_vertices(Scan* scan)
 {
     int i;
     Mesh* mesh;
@@ -726,7 +695,6 @@ Scan* scan;
     mesh = scan->meshes[mesh_level];
 
     /* examine each vertex to see if it should be removed */
-
     count = 0;
     removed = 0;
     on_edge = 0;
@@ -770,7 +738,6 @@ Scan* scan;
 #endif
 }
 
-
 /******************************************************************************
 Remove a vertex and re-tile the surrounding region.
 
@@ -781,10 +748,7 @@ Entry:
 Exit:
   returns 1 if successful at removing vertex, 0 if not
 ******************************************************************************/
-
-int remove_a_vertex(scan, v)
-Scan* scan;
-Vertex* v;
+int remove_a_vertex(Scan* scan, Vertex* v)
 {
     int j, k;
     Mesh* mesh;
@@ -797,7 +761,6 @@ Vertex* v;
     int result;
     float w;
     int p1, p2, p3;
-    int get_ntris();
     int ntris;
 
     mesh = scan->meshes[mesh_level];
@@ -909,7 +872,6 @@ Vertex* v;
     return (1);
 }
 
-
 /******************************************************************************
 Remove long, thin polygons from a mesh.
 
@@ -918,10 +880,7 @@ Entry:
   fract - length of shortest allowed altitude, as a fraction of the spacing
       between range points
 ******************************************************************************/
-
-remove_sliver_tris(scan, fract)
-Scan* scan;
-float fract;
+void remove_sliver_tris(Scan* scan, float fract)
 {
     int i;
     Mesh* mesh;
@@ -982,7 +941,6 @@ float fract;
     mesh->edges_valid = 0;
 }
 
-
 /******************************************************************************
 Remove vertices that have very similar normals to their neighbors
 
@@ -994,10 +952,7 @@ Entry:
   scan  - mesh to remove vertices from
   cos_max - maximum dot product allowed, else removal
 ******************************************************************************/
-
-remove_flat_verts(scan, cos_max)
-Scan* scan;
-float cos_max;
+void remove_flat_verts(Scan* scan, float cos_max)
 {
     int i, j;
     Mesh* mesh;
@@ -1008,7 +963,6 @@ float cos_max;
     /*
       printf("%f\n", cos_max);
     */
-
     mesh = scan->meshes[mesh_level];
 
     /* Check dot products */
@@ -1039,7 +993,6 @@ float cos_max;
     mesh->edges_valid = 0;
 }
 
-
 /******************************************************************************
 Remove polygons with bad aspect ratios.  Currently no working very well.
 
@@ -1052,12 +1005,7 @@ Entry:
          that vertex belongs to, and the number of bad triangles
          a vertex belongs to
 ******************************************************************************/
-
-remove_bad_aspect_tris(scan, max_aspect, min_cos, diff)
-Scan* scan;
-float max_aspect;
-float min_cos;
-int diff;
+void remove_bad_aspect_tris(Scan* scan, float max_aspect, float min_cos, int diff)
 {
     int i;
     Mesh* mesh;
@@ -1143,7 +1091,6 @@ int diff;
     mesh->edges_valid = 0;
 }
 
-
 /******************************************************************************
 Move a given vertex to a new position.
 
@@ -1152,11 +1099,7 @@ Entry:
   pos  - it's new position
   mesh - mesh containing vertex
 ******************************************************************************/
-
-move_vertex(v, pos, mesh)
-Vertex* v;
-Vector pos;
-Mesh* mesh;
+void move_vertex(Vertex* v, Vector pos, Mesh* mesh)
 {
     int i;
 
@@ -1175,7 +1118,6 @@ Mesh* mesh;
         find_vertex_normal(v->verts[i]);
 }
 
-
 /******************************************************************************
 Remove any short edges between vertices of two meshes that were introduced
 during zippering.
@@ -1185,10 +1127,7 @@ Entry:
   fract - length of shortest allowed edge, as a fraction of the spacing
       between range points
 ******************************************************************************/
-
-remove_short_edges(scan, fract)
-Scan* scan;
-float fract;
+void remove_short_edges(Scan* scan, float fract)
 {
     int i, j;
     Mesh* mesh;
@@ -1243,7 +1182,6 @@ float fract;
     mesh->edges_valid = 0;
 }
 
-
 /******************************************************************************
 Collapse an edge between two vertices and combine the vertices in the process.
 
@@ -1251,10 +1189,7 @@ Entry:
   mesh  - mesh in which this is taking place
   v1,v2 - the two vertices to combine
 ******************************************************************************/
-
-collapse_edge(mesh, v1, v2)
-Mesh* mesh;
-Vertex* v1, *v2;
+void collapse_edge(Mesh* mesh, Vertex* v1, Vertex* v2)
 {
     int i, j;
     int v1ntris, v2ntris;
@@ -1339,13 +1274,10 @@ Vertex* v1, *v2;
     vertex_edge_test(v1);
 }
 
-
 /******************************************************************************
 Chop each triangle of a mesh into four triangles.
 ******************************************************************************/
-
-quarter_mesh(scan)
-Scan* scan;
+void quarter_mesh(Scan* scan)
 {
     int i, j, k;
     Mesh* mesh;
@@ -1361,7 +1293,6 @@ Scan* scan;
     mesh = scan->meshes[mesh_level];
 
     /* allocate extra information at each triangle in the mesh */
-
     for (i = 0; i < mesh->ntris; i++) {
         tri = mesh->tris[i];
         tri->more = (More_Tri_Stuff*) malloc(sizeof(More_Tri_Stuff));
@@ -1372,7 +1303,6 @@ Scan* scan;
 
     /* examine each edge of a mesh to see if we need to add a new */
     /* vertex at its midpoint */
-
     for (i = mesh->nverts - 1; i >= 0; i--) {
 
         v1 = mesh->verts[i];
@@ -1426,7 +1356,6 @@ Scan* scan;
     }
 
     /* replace each triangle in mesh with four smaller ones */
-
     for (i = mesh->ntris - 1; i >= 0; i--) {
 
         tri = mesh->tris[i];
@@ -1464,7 +1393,6 @@ Scan* scan;
     mesh->edges_valid = 0;
 }
 
-
 /******************************************************************************
 Fill in a loop of a mesh.
 
@@ -1475,10 +1403,7 @@ Entry:
 Exit:
   returns 0 if successful, 1 if it couldn't fill the loop
 ******************************************************************************/
-
-int fill_loop(loop, scan)
-int loop;
-Scan* scan;
+int fill_loop(int loop, Scan* scan)
 {
     int i;
     Mesh* mesh;
@@ -1497,7 +1422,6 @@ Scan* scan;
 
     /* go around the entire loop to see if all edges are oriented properly */
     /* and also come up with rough "normal" */
-
     vset(norm, 0.0, 0.0, 0.0);
     fedge = mesh->looplist.loops[loop];
     been_around = 0;
@@ -1577,7 +1501,6 @@ Scan* scan;
     return (0);
 }
 
-
 /******************************************************************************
 Look for edges that should be "swapped" by deleting their common triangles and
 creating two triangles with a shared edge that goes in the other direction.
@@ -1585,9 +1508,7 @@ creating two triangles with a shared edge that goes in the other direction.
 Entry:
   sc - scan containing mesh
 ******************************************************************************/
-
-swap_edges(sc)
-Scan* sc;
+void swap_edges(Scan* sc)
 {
     int i, j, k;
     Mesh* mesh;
@@ -1602,7 +1523,6 @@ Scan* sc;
     mesh = sc->meshes[mesh_level];
 
     /* look at all edges in mesh */
-
     for (i = 0; i < mesh->nverts; i++) {
         vert1 = mesh->verts[i];
 
@@ -1690,7 +1610,6 @@ Scan* sc;
     }
 }
 
-
 /******************************************************************************
 Return the average of the surrounding vertex positions adjacent to a given
 vertex.
@@ -1701,10 +1620,7 @@ Entry:
 Exit:
   new_pos - average position of neighboring vertices
 ******************************************************************************/
-
-compute_smoothing(v, new_pos)
-Vertex* v;
-Vector new_pos;
+void compute_smoothing(Vertex* v, Vector new_pos)
 {
     int i;
     int count = 0;
@@ -1727,7 +1643,6 @@ Vector new_pos;
         vcopy(v->coord, new_pos);
 }
 
-
 /******************************************************************************
 Smooth all the vertex positions in a mesh by averaging the nearby neighbor
 positions.
@@ -1735,9 +1650,7 @@ positions.
 Entry:
   sc - scan containing mesh
 ******************************************************************************/
-
-smooth_vertices(sc)
-Scan* sc;
+void smooth_vertices(Scan* sc)
 {
     int i;
     Mesh* mesh;
@@ -1747,7 +1660,6 @@ Scan* sc;
     mesh = sc->meshes[mesh_level];
 
     /* find the smoothed position of all vertices in the mesh */
-
     for (i = 0; i < mesh->nverts; i++) {
 
         v = mesh->verts[i];
@@ -1762,7 +1674,6 @@ Scan* sc;
     }
 
     /* change the positions */
-
     for (i = 0; i < mesh->nverts; i++) {
         v = mesh->verts[i];
         remove_from_hash(v, mesh);
@@ -1771,12 +1682,10 @@ Scan* sc;
     }
 
     /* fix the triangle geometry */
-
     for (i = 0; i < mesh->ntris; i++)
         set_triangle_geometry(mesh->tris[i]);
 
     /* find the correct normals */
-
     for (i = 0; i < mesh->nverts; i++)
         find_vertex_normal(mesh->verts[i]);
 }

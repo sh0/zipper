@@ -1,78 +1,56 @@
 /*
+ * Use a greedy algorithm to split a polygon into triangles.
+ *
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Use a greedy algorithm to split a polygon into triangles.
-
-Greg Turk
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
+// External
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
-#include "matrix.h"
+// Internal
 #include "triangulate.h"
 
-/* screen stuff */
-
-typedef struct Edge {
-    int p1, p2;
-    float len;
-    float a, b, c;
-    int final;
-} Edge;
-
-typedef struct Point {
-    Vector pos;           /* location in plane */
-    Vector pos3d;         /* old location in 3-space */
-    int boundary;
-    struct Edge** edges;
-    int nedges;
-    int max_edges;
-    int index;
-} Point;
-
 /* the set of points to be triangulated */
-
-static Point** points = NULL;
+static TriangulatePoint** points = NULL;
 static int npoints = 0;
 static int max_points = 20;
 
-
-
 /* list of all possible edges */
-
-static Edge** edges = NULL;
+static TriangulateEdge** edges = NULL;
 static int nedges = 0;
 static int max_edges = 400;
 
 /* list of edges that are in the final triangulation */
-
-static Edge** final = NULL;
+static TriangulateEdge** final = NULL;
 static int nfinal;
 
 /* list of triangles */
-
-typedef struct Triangle {
-    int p1, p2, p3;
-    Edge* e1, *e2, *e3;
-} Triangle;
-
-static Triangle* tris = NULL;
+static TriangulateTriangle* tris = NULL;
 static int ntris;
 static int tri_goal;
 
@@ -87,7 +65,6 @@ static int y_screen = 500;
 
 static Matrix trans_mat, trans_mat_inv;
 
-
 /******************************************************************************
 Initialize the polygon splitter.
 
@@ -97,16 +74,14 @@ Entry:
 Exit
   returns 1 if we were given a bad plane equation, 0 otherwise
 ******************************************************************************/
-
-init_splitter(a, b, c, d)
-float a, b, c, d;
+int init_splitter(float a, float b, float c, float d)
 {
     int i;
     int result;
 
     /* allocate the edge list or free up old edges */
     if (edges == NULL) {
-        edges = (Edge**) malloc(sizeof(Edge*) * max_edges);
+        edges = (TriangulateEdge**) malloc(sizeof(TriangulateEdge*) * max_edges);
     } else {
         for (i = 0; i < nedges; i++)
             free(edges[i]);
@@ -114,7 +89,7 @@ float a, b, c, d;
 
     /* allocate the point list or free up old points */
     if (points == NULL) {
-        points = (Point**) malloc(sizeof(Point*) * max_points);
+        points = (TriangulatePoint**) malloc(sizeof(TriangulatePoint*) * max_points);
     } else {
         for (i = 0; i < npoints; i++) {
             free(points[i]->edges);
@@ -145,7 +120,6 @@ float a, b, c, d;
     return (result);
 }
 
-
 /******************************************************************************
 Add a point that is a part of the polygonal boundary.
 
@@ -153,17 +127,14 @@ Entry:
   xx,yy,zz - 3-space position of point
   index    - data to save for calling program
 ******************************************************************************/
-
-int add_boundary_point(xx, yy, zz, index)
-float xx, yy, zz;
-int index;
+int add_boundary_point(float xx, float yy, float zz, int index)
 {
     Vector vec, tvec;
-    Point* pt;
+    TriangulatePoint* pt;
 
     if (npoints >= max_points) {
         max_points *= 2;
-        points = (Point**) realloc(points, sizeof(Point*) * max_points);
+        points = (TriangulatePoint**) realloc(points, sizeof(TriangulatePoint*) * max_points);
     }
 
     /* transform (xx,yy,zz) onto plane */
@@ -172,7 +143,7 @@ int index;
     vec[Z] = zz;
     vapply(trans_mat, vec, tvec);
 
-    pt = (Point*) malloc(sizeof(Point));
+    pt = (TriangulatePoint*) malloc(sizeof(TriangulatePoint));
     pt->pos[X] = tvec[X];
     pt->pos[Y] = tvec[Y];
     pt->pos[Z] = 0;
@@ -181,7 +152,7 @@ int index;
     pt->pos3d[Z] = zz;
     pt->nedges = 0;
     pt->max_edges = 6;
-    pt->edges = (Edge**) malloc(sizeof(Edge*) * pt->max_edges);
+    pt->edges = (TriangulateEdge**) malloc(sizeof(TriangulateEdge*) * pt->max_edges);
     pt->boundary = 1;
     pt->index = index;
 
@@ -190,7 +161,6 @@ int index;
 
     boundary_count++;
 }
-
 
 /******************************************************************************
 Add a point to the list of points interior to polygon.
@@ -202,17 +172,14 @@ Entry:
 Exit:
   returns 0 if point is inside polygon, 1 if it is outside (bad)
 ******************************************************************************/
-
-add_point(xx, yy, zz, index)
-float xx, yy, zz;
-int index;
+int add_point(float xx, float yy, float zz, int index)
 {
     Vector vec, tvec;
-    Point* pt;
+    TriangulatePoint* pt;
 
     if (npoints >= max_points) {
         max_points *= 2;
-        points = (Point**) realloc(points, sizeof(Point*) * max_points);
+        points = (TriangulatePoint**) realloc(points, sizeof(TriangulatePoint*) * max_points);
     }
 
     /* transform (xx,yy,zz) onto plane */
@@ -222,14 +189,12 @@ int index;
     vapply(trans_mat, vec, tvec);
 
     /* check to see that point is inside polygon */
-
     if (point_in_split_poly(tvec[X], tvec[Y]) == 0) {
         return (1);
     }
 
     /* add the point */
-
-    pt = (Point*) malloc(sizeof(Point));
+    pt = (TriangulatePoint*) malloc(sizeof(TriangulatePoint));
     pt->pos[X] = tvec[X];
     pt->pos[Y] = tvec[Y];
     pt->pos[Z] = 0;
@@ -238,7 +203,7 @@ int index;
     pt->pos3d[Z] = zz;
     pt->nedges = 0;
     pt->max_edges = 6;
-    pt->edges = (Edge**) malloc(sizeof(Edge*) * pt->max_edges);
+    pt->edges = (TriangulateEdge**) malloc(sizeof(TriangulateEdge*) * pt->max_edges);
     pt->boundary = 0;
     pt->index = index;
 
@@ -248,24 +213,18 @@ int index;
     return (0);  /* point is okay */
 }
 
-
 /******************************************************************************
 Return the number of points in the polygon being split.
 ******************************************************************************/
-
 int split_npoints()
 {
     return (npoints);
 }
 
-
 /******************************************************************************
 See if point is close to a given value.
 ******************************************************************************/
-
-int close_orig(p, x, y, z)
-Point* p;
-float x, y, z;
+int close_orig(TriangulatePoint* p, float x, float y, float z)
 {
     float len;
     float dx, dy, dz;
@@ -280,28 +239,21 @@ float x, y, z;
         return (0);
 }
 
-
 /******************************************************************************
 Set the value of the parallel edge flag.
 ******************************************************************************/
-
-set_parallel_flag(val)
-int val;
+void set_parallel_flag(int val)
 {
     parallel_flag = val;
 }
 
-
 /******************************************************************************
 Set the value of the shuffle flag.
 ******************************************************************************/
-
-set_shuffle_flag(val)
-int val;
+void set_shuffle_flag(int val)
 {
     shuffle_flag = val;
 }
-
 
 /******************************************************************************
 Set the value of the rescale flag.
@@ -310,35 +262,28 @@ Entry:
   val - value of rescale flag
   x,y - size of screen
 ******************************************************************************/
-
-set_rescale_flag(val, x, y)
-int val;
-int x, y;
+void set_rescale_flag(int val, int x, int y)
 {
     rescale_flag = val;
     x_screen = x;
     y_screen = y;
 }
 
-
 /******************************************************************************
 Add an edge to the list of edges.
 ******************************************************************************/
-
-add_edge(i, j)
-int i, j;
+void add_edge(int i, int j)
 {
     float dx, dy, dz;
-    Edge* edge;
+    TriangulateEdge* edge;
 
     if (nedges >= max_edges) {
         max_edges *= 2;
-        edges = (Edge**) realloc(edges, sizeof(Edge*) * max_edges);
+        edges = (TriangulateEdge**) realloc(edges, sizeof(TriangulateEdge*) * max_edges);
     }
 
     /* make the new edge */
-
-    edge = (Edge*) malloc(sizeof(Edge));
+    edge = (TriangulateEdge*) malloc(sizeof(TriangulateEdge));
     edge->p1 = i;
     edge->p2 = j;
     edge->final = 0;
@@ -358,52 +303,37 @@ int i, j;
     nedges++;
 }
 
-
 /******************************************************************************
 Add an edge to the final edge list.
 ******************************************************************************/
-
-add_final_edge(e)
-Edge* e;
+void add_final_edge(TriangulateEdge* e)
 {
-    Point* p1, *p2;
+    TriangulatePoint* p1, *p2;
 
     /* add the edge to the final edge list */
-
     final[nfinal] = e;
     nfinal++;
     e->final = 1;  /* mark this edge as a final edge */
 
     /* have the edge's points refer to this edge */
-
     p1 = points[e->p1];
     p2 = points[e->p2];
 
     /* make sure there is enough room for the new edges */
-
     if (p1->nedges >= p1->max_edges) {
         p1->max_edges += 4;
-        p1->edges = (Edge**) realloc(p1->edges, sizeof(Edge*) * p1->max_edges);
+        p1->edges = (TriangulateEdge**) realloc(p1->edges, sizeof(TriangulateEdge*) * p1->max_edges);
     }
 
     if (p2->nedges >= p2->max_edges) {
         p2->max_edges += 4;
-        p2->edges = (Edge**) realloc(p2->edges, sizeof(Edge*) * p2->max_edges);
+        p2->edges = (TriangulateEdge**) realloc(p2->edges, sizeof(TriangulateEdge*) * p2->max_edges);
     }
 
     /* add the edges to the points' lists of edges */
-
     p1->edges[p1->nedges++] = e;
     p2->edges[p2->nedges++] = e;
-
-    /* maybe draw the edge */
-
-#if 0
-    if (drawing_flag)
-        draw_edge(e, color2);
-#endif
 }
-
 
 /******************************************************************************
 Copy a bunch of bytes.
@@ -413,20 +343,15 @@ Entry:
   src - source of bytes
   num - number of bytes to copy
 ******************************************************************************/
-
-byte_copy(dst, src, num)
-char* dst, *src;
-int num;
+void byte_copy(char* dst, char* src, int num)
 {
     int i;
-
     for (i = 0; i < num; i++) {
         *dst = *src;
         dst++;
         src++;
     }
 }
-
 
 /******************************************************************************
 Randomly shuffle a bunch of elements in a list.
@@ -439,18 +364,13 @@ Entry:
 Exit:
   list is shuffled
 ******************************************************************************/
-
-shuffle(list, num, size)
-char* list;
-int num;
-int size;
+void shuffle(char* list, int num, int size)
 {
     int i, j;
     char* temp;
-    extern double drand48();
+    //extern double drand48();
 
     temp = (char*) malloc(size);
-
     for (i = num - 1; i > 0; i--) {
 
         j = drand48() * (i + 1);
@@ -460,18 +380,17 @@ int size;
         byte_copy(list + i * size, list + j * size, size);
         byte_copy(list + j * size, temp, size);
     }
-
     free(temp);
 }
-
 
 /******************************************************************************
 Compare the length of two edges (for sorting by length).
 ******************************************************************************/
-
-int edge_compare(e1, e2)
-Edge** e1, ** e2;
+int edge_compare(const void* p1, const void* p2)
 {
+    const TriangulateEdge** e1 = (const TriangulateEdge**) p1;
+    const TriangulateEdge** e2 = (const TriangulateEdge**) p2;
+
     if ((*e1)->len < (*e2)->len)
         return (-1);
     else if ((*e1)->len > (*e2)->len)
@@ -479,7 +398,6 @@ Edge** e1, ** e2;
     else
         return (0);
 }
-
 
 /******************************************************************************
 See if this edge is inside the polygonal boundary.
@@ -490,25 +408,20 @@ Entry:
 Exit:
   returns 1 if edge is inside, 0 if outside
 ******************************************************************************/
-
-int inside_boundary(e)
-Edge* e;
+int inside_boundary(TriangulateEdge* e)
 {
     float x, y;
 
     /* determine midpoint of edge */
-
     x = (points[e->p1]->pos[X] + points[e->p2]->pos[X]) * 0.5;
     y = (points[e->p1]->pos[Y] + points[e->p2]->pos[Y]) * 0.5;
 
     /* see if this midpoint is inside the polygon or not */
-
     if (point_in_split_poly(x, y))
         return (1);
     else
         return (0);
 }
-
 
 /******************************************************************************
 See if any points are nearly on this edge.
@@ -519,9 +432,7 @@ Entry:
 Exit:
   returns 1 if there is point nearly on the edge, 0 if not
 ******************************************************************************/
-
-nearly_on_edge(e)
-Edge* e;
+int nearly_on_edge(TriangulateEdge* e)
 {
     int i;
     float x, y;
@@ -532,11 +443,9 @@ Edge* e;
     float t;
 
     /* look at each point in the set */
-
     for (i = 0; i < npoints; i++) {
 
         /* don't test the points that form the edge */
-
         if (i == e->p1 || i == e->p2)
             continue;
 
@@ -579,7 +488,6 @@ Edge* e;
     return (0);
 }
 
-
 /******************************************************************************
 See if this edge intersects any of the edges already in the final collection.
 
@@ -589,12 +497,10 @@ Entry:
 Exit:
   return 0 if there are no intersections, 1 if there is an intersection
 ******************************************************************************/
-
-int any_intersection(e)
-Edge* e;
+int any_intersection(TriangulateEdge* e)
 {
     int i;
-    Edge* ee;
+    TriangulateEdge* ee;
     float a, b, c;
     float aa, bb, cc;
     float x1, y1;
@@ -614,7 +520,6 @@ Edge* e;
     y2 = points[e->p2]->pos[Y];
 
     /* check the one edge against all others */
-
     for (i = 0; i < nfinal; i++) {
 
         ee = final[i];
@@ -658,7 +563,6 @@ Edge* e;
             float t;
 
             /* (pa,pb) is a unit vector parallel to both edges */
-
             pa = b;
             pb = -a;
 
@@ -709,15 +613,12 @@ Edge* e;
 
         /* if we get here, both edges straddle the other's line */
         /* so signal an intersection */
-
         return (1);
     }
 
     /* if we get here, the edge doesn't intersect any other edge */
-
     return (0);
 }
-
 
 /******************************************************************************
 Use a greedy algorithm to connect the points into a set of triangles.
@@ -725,17 +626,15 @@ Use a greedy algorithm to connect the points into a set of triangles.
 Exit:
   returns 1 if polygon self-intersects or something else went wrong, 0 if not
 ******************************************************************************/
-
 int greedy_connect()
 {
     int i, j;
     int p1, p2;
     int final_goal;
-    Edge* e;
+    TriangulateEdge* e;
     int whoops_flag;
 
     /* maybe rescale point positions */
-
     if (rescale_flag)
         rescale_points();
 
@@ -748,7 +647,7 @@ int greedy_connect()
     /* allocate space for the final collection of edges */
 
     final_goal = 3 * (npoints - 2) - boundary_count + 3;
-    final = (Edge**) malloc(sizeof(Edge*) * final_goal);
+    final = (TriangulateEdge**) malloc(sizeof(TriangulateEdge*) * final_goal);
 
 #if 0
     if (final == NULL) {
@@ -779,17 +678,14 @@ int greedy_connect()
     }
 
     /* "adjust" the lengths to make very skinny triangles less likely */
-
     reorder_edges();
 
     /* sort the edges by increasing length */
-
-    qsort(edges, nedges, sizeof(Edge*), edge_compare);
+    qsort(edges, nedges, sizeof(TriangulateEdge*), edge_compare);
 
     /* maybe randomly shuffle the edges */
-
     if (shuffle_flag)
-        shuffle(edges, nedges, sizeof(Edge*));
+        shuffle((char*) edges, nedges, sizeof(TriangulateEdge*));
 
 #if 0
     fprintf(stderr, "%d edges on boundary\n", nfinal);
@@ -850,30 +746,25 @@ int greedy_connect()
     return (whoops_flag);
 }
 
-
 /******************************************************************************
 Collect together edges to form triangles.
 ******************************************************************************/
-
-int collect_triangles(whoops_flag)
-int whoops_flag;
+int collect_triangles(int whoops_flag)
 {
     int i, j, k;
     int p1, p2, p3;
-    Edge* e1, *e2, *e3;
+    TriangulateEdge* e1, *e2, *e3;
 #define TRI_GOAL_SLOP 8
 
     /* allocate space for triangles */
-
     tri_goal = nfinal - npoints + 1;
-    tris = (Triangle*) malloc(sizeof(Triangle) * (tri_goal + TRI_GOAL_SLOP));
+    tris = (TriangulateTriangle*) malloc(sizeof(TriangulateTriangle) * (tri_goal + TRI_GOAL_SLOP));
     ntris = 0;
 
     /* check for triangle allocation */
-
     if (tris == 0) {
         fprintf(stderr, "collect_triangles: cannot allocate %d tris\n", tri_goal);
-        return;
+        return 0;
     }
 
     /* note: the edges e1, e2, e3 are numbered so they are across the */
@@ -881,30 +772,25 @@ int whoops_flag;
     /* (this is an assumption of the "maybe_make_tri" routine) */
 
     /* examine each edge to see what triangles it is a part of */
-
     for (i = 0; i < nfinal; i++) {
 
         e1 = final[i];
 
         /* remember the two points at either end of this edge */
-
         p2 = e1->p1;
         p3 = e1->p2;
 
         /* look at all edges of first point of the edge "e1" */
-
         for (j = 0; j < points[p2]->nedges; j++) {
 
             e3 = points[p2]->edges[j];
 
             /* we'll only look at larger numbered edges to make sure */
             /* we only try to form each triangle once */
-
             if ((size_t) e3 <= (size_t) e1)
                 continue;
 
             /* pick third point from opposite side of the edge "e3" */
-
             if (e3->p1 == p2)
                 p1 = e3->p2;
             else if (e3->p2 == p2)
@@ -915,19 +801,16 @@ int whoops_flag;
             }
 
             /* look at all edges of second point of the edge "e1" */
-
             for (k = 0; k < points[p3]->nedges; k++) {
 
                 e2 = points[p3]->edges[k];
 
                 /* only try to form each triangle once */
-
                 if ((size_t) e2 <= (size_t) e1)
                     continue;
 
                 /* if point at opposite side of "e3" is that same third point, */
                 /* we may have a valid triangle */
-
                 if (e2->p1 == p1 || e2->p2 == p1) {
                     maybe_make_tri(p1, p2, p3, e1, e2, e3);
                     break;
@@ -948,11 +831,9 @@ int whoops_flag;
     }
 
     /* orient all triangles the same direction as the boundary polygon */
-
     orient_triangles();
 
     /* debug drawing */
-
     if (whoops_flag) {
 
 #if 0
@@ -987,7 +868,6 @@ int whoops_flag;
     return (whoops_flag);
 }
 
-
 /******************************************************************************
 Make a triangle out of three points if the triangle does not enclose any
 other points.
@@ -996,10 +876,7 @@ Entry:
   p1,p2,p3 - points of prospective triangle
   e1,e2,e3 - edges of triangle
 ******************************************************************************/
-
-maybe_make_tri(p1, p2, p3, e1, e2, e3)
-int p1, p2, p3;
-Edge* e1, *e2, *e3;
+void maybe_make_tri(int p1, int p2, int p3, TriangulateEdge* e1, TriangulateEdge* e2, TriangulateEdge* e3)
 {
     int i;
     float v;
@@ -1009,13 +886,11 @@ Edge* e1, *e2, *e3;
     /* calculate values of the points by plugging into the linear edge */
     /* equations, to be used to find which side of the edges other */
     /* points are on */
-
     v1 = points[p1]->pos[X] * e1->a + points[p1]->pos[Y] * e1->b + e1->c;
     v2 = points[p2]->pos[X] * e2->a + points[p2]->pos[Y] * e2->b + e2->c;
     v3 = points[p3]->pos[X] * e3->a + points[p3]->pos[Y] * e3->b + e3->c;
 
     /* see if any other points are inside the potential triangle */
-
     for (i = 0; i < npoints; i++) {
 
         /* don't look at points of triangle */
@@ -1065,16 +940,13 @@ Edge* e1, *e2, *e3;
     if (drawing_flag)
         draw_small_tri(p1, p2, p3, color1);
 #endif
-
 }
-
 
 /******************************************************************************
 Make all the created triangles oriented the same way (clockwise vs. counter-
 clockwise) as the original boundary polygon.
 ******************************************************************************/
-
-new_not_used_orient_triangles()
+void new_not_used_orient_triangles()
 {
     int i;
     int p1, p2, p3;
@@ -1084,7 +956,6 @@ new_not_used_orient_triangles()
     int one, neg;
 
     /* search for a triangle with two boundary points */
-
     one = neg = 0;
 
     for (i = 0; i < ntris; i++) {
@@ -1155,14 +1026,12 @@ new_not_used_orient_triangles()
     }
 
     /* make sure we've found a border triangle */
-
     if (one + neg == 0) {
         fprintf(stderr, "orient_triangles: couldn't find triangle on boundary\n");
         fprintf(stderr, "ntris = %d\n", ntris);
     }
 
     /* pick the majority orientation */
-
     if (one >= neg)
         orient = 1;
     else
@@ -1170,7 +1039,6 @@ new_not_used_orient_triangles()
 
     /* go through all triangles and flip them to match the orientation */
     /* of the border triangle */
-
     for (i = 0; i < ntris; i++) {
         t = triangle_direction(&tris[i]);
         if (t != orient)
@@ -1178,13 +1046,11 @@ new_not_used_orient_triangles()
     }
 }
 
-
 /******************************************************************************
 Make all the created triangles oriented the same way (clockwise vs. counter-
 clockwise) as the original boundary polygon.
 ******************************************************************************/
-
-orient_triangles()
+void orient_triangles()
 {
     int i;
     int found;
@@ -1194,7 +1060,6 @@ orient_triangles()
     int t;
 
     /* search for a triangle with two boundary points */
-
     found = 0;
 
     for (i = 0; i < ntris; i++) {
@@ -1266,7 +1131,6 @@ orient_triangles()
     }
 }
 
-
 /******************************************************************************
 Return which direction a triangle is facing (clockwise or counter-clockwise).
 
@@ -1276,27 +1140,22 @@ Entry:
 Exit:
   returns 1 if one way, -1 for other (I'm too lazy to figure which is which)
 ******************************************************************************/
-
-int triangle_direction(tri)
-Triangle* tri;
+int triangle_direction(TriangulateTriangle* tri)
 {
     Vector v1, v2, v3;
     Vector cross;
 
     /* get the triangle vertices */
-
     vcopy(points[tri->p1]->pos, v1);
     vcopy(points[tri->p2]->pos, v2);
     vcopy(points[tri->p3]->pos, v3);
 
     /* find directions of two edges and take their crossproduct */
-
     vsub(v2, v1, v2);
     vsub(v3, v1, v3);
     vcross(v2, v3, cross);
 
     /* return the orientation */
-
     if (cross[Z] < 0)
         return (-1);
     else if (cross[Z] > 0)
@@ -1307,25 +1166,20 @@ Triangle* tri;
     }
 }
 
-
 /******************************************************************************
 Flip the order of the vertices and edges in a triangle.
 ******************************************************************************/
-
-flip_triangle(tri)
-Triangle* tri;
+void flip_triangle(TriangulateTriangle* tri)
 {
     int temp;
-    Edge* etemp;
+    TriangulateEdge* etemp;
 
     /* swap p2 and p3 */
-
     temp = tri->p2;
     tri->p2 = tri->p3;
     tri->p3 = temp;
 
     /* swap e2 and e3 */
-
     etemp = tri->e2;
     tri->e2 = tri->e3;
     tri->e3 = etemp;
@@ -1335,12 +1189,10 @@ Triangle* tri;
 /******************************************************************************
 Return the number of triangles that were formed.
 ******************************************************************************/
-
 int get_ntris()
 {
     return (ntris);
 }
-
 
 /******************************************************************************
 Return the indices of a given triangle.
@@ -1351,32 +1203,25 @@ Entry:
 Exit:
   p1,p2,p3 - indices of the triangle's vertices
 ******************************************************************************/
-
-int get_triangle(num, p1, p2, p3)
-int num;
-int* p1, *p2, *p3;
+int get_triangle(int num, int* p1, int* p2, int* p3)
 {
     *p1 = points[tris[num].p1]->index;
     *p2 = points[tris[num].p2]->index;
     *p3 = points[tris[num].p3]->index;
 }
 
-
 /******************************************************************************
 Print polygon info.
 ******************************************************************************/
-
-print_poly()
+void print_poly()
 {
     int i;
 
     fprintf(stderr, "boundary_count: %d\n", boundary_count);
-
     for (i = 0; i < boundary_count; i++) {
         fprintf(stderr, " x y: %f %f\n", points[i]->pos[X], points[i]->pos[Y]);
     }
 }
-
 
 /******************************************************************************
 Determine which triangle a point is in.
@@ -1388,15 +1233,12 @@ Exit:
   b1,b2,b3 - barycentric coordinates of point in the triangle
   returns index of triangle the point is in, or -1 if error
 ******************************************************************************/
-
-int point_in_which_triangle(x, y, b1, b2, b3)
-float x, y;
-float* b1, *b2, *b3;
+int point_in_which_triangle(float x, float y, float* b1, float* b2, float* b3)
 {
     int i;
     int result;
-    Triangle* tri;
-    Edge* e1, *e2, *e3;
+    TriangulateTriangle* tri;
+    TriangulateEdge* e1, *e2, *e3;
     int p1, p2, p3;
     float v1, v2, v3;
     float v;
@@ -1409,9 +1251,7 @@ float* b1, *b2, *b3;
     float len;
 
     /* check to see that the point is inside the polygon */
-
     result = point_in_split_poly(x, y);
-
     if (!result) {
         fprintf(stderr, "point_in_which_triangle: point not in polygon\n");
         fprintf(stderr, "x y: %f %f\n", x, y);
@@ -1423,7 +1263,6 @@ float* b1, *b2, *b3;
     }
 
     /* look through each triangle in set */
-
     found = 0;
 
     for (i = 0; i < ntris; i++) {
@@ -1468,7 +1307,6 @@ float* b1, *b2, *b3;
     }
 
     /* we should have found a triangle that the point is in */
-
     if (!found) {
         fprintf(stderr, "point_in_which_triangle: point not in any tri\n");
         return (-1);
@@ -1479,7 +1317,6 @@ float* b1, *b2, *b3;
 #endif
 
     /* determine barycentric cooridinates of point in the triangle */
-
     tri = &tris[index];
 
     p1 = tri->p1;
@@ -1529,7 +1366,6 @@ float* b1, *b2, *b3;
     return (index);
 }
 
-
 /******************************************************************************
 Compute a line passing through two points.
 
@@ -1540,11 +1376,7 @@ Entry:
 Exit:
   aa,bb,cc - equation of line
 ******************************************************************************/
-
-compute_line(x1, y1, x2, y2, aa, bb, cc)
-float x1, y1;
-float x2, y2;
-float* aa, *bb, *cc;
+void compute_line(float x1, float y1, float x2, float y2, float* aa, float* bb, float* cc)
 {
     float a, b, c;
     float len;
@@ -1566,12 +1398,10 @@ float* aa, *bb, *cc;
     *cc = c;
 }
 
-
 /******************************************************************************
 Re-scale the points so they fit in the window.
 ******************************************************************************/
-
-rescale_points()
+void rescale_points()
 {
     int i;
     float x, y;
@@ -1610,7 +1440,6 @@ rescale_points()
     }
 }
 
-
 /******************************************************************************
 Check to see that none of the old polygons in an area to be re-tiled were
 folded over one another.
@@ -1621,9 +1450,7 @@ Entry:
 Exit:
   returns 1 if there was folding over, 0 if none of the polygons overlapped
 ******************************************************************************/
-
-int fold_in_poly_check(x, y)
-float x, y;
+int fold_in_poly_check(float x, float y)
 {
     int i;
     Vector n;
@@ -1634,13 +1461,11 @@ float x, y;
     /* We're going to determine folds by examining the cross-products of */
     /* the vectors radiating from the central point.  If the sign of this */
     /* ever changes, then there is a fold. */
-
     center[X] = x;
     center[Y] = y;
     center[Z] = 0;
 
     /* determine sign of initial cross-product */
-
     vsub(points[0]->pos, center, v1);
     vsub(points[1]->pos, center, v2);
     vcross(v1, v2, n);
@@ -1652,18 +1477,14 @@ float x, y;
     }
 
     /* examine other cross-products */
-
     for (i = 1; i < npoints; i++) {
-
         /* get next cross-product */
-
         vsub(points[i]->pos, center, v1);
         vsub(points[(i + 1) % npoints]->pos, center, v2);
         vcross(v1, v2, n);
         cross2 = n[Z];
 
         /* see if the sign changed */
-
         if (cross1 * cross2 < 0)
             return (1);
     }
@@ -1671,24 +1492,18 @@ float x, y;
     return (0);
 }
 
-
 /******************************************************************************
 See if point is in the given polygon.
 ******************************************************************************/
-
-int point_in_split_poly(x, y)
-float x, y;
+int point_in_split_poly(float x, float y)
 {
     int result;
-
     result = point_in_poly(x, y, boundary_count, points);
-
     return (result);
 }
 
-
 /******************************************************************************
-Point in polygon test from Ken McElvain.
+TriangulatePoint in polygon test from Ken McElvain.
 
 Entry:
   x,y     - point to test against polygon
@@ -1698,11 +1513,7 @@ Entry:
 Exit:
   returns zero if point is outside polygon, non-zero for points in polygon
 ******************************************************************************/
-
-int point_in_poly(x, y, cnt, polypts)
-float x, y;
-int cnt;
-Point** polypts;
+int point_in_poly(float x, float y, int cnt, TriangulatePoint** polypts)
 {
     int i;
     int oldquad, newquad;
@@ -1716,19 +1527,16 @@ Point** polypts;
 
     /* examine each point of the polygon and follow the winding number */
     /* as we move around the given point to test */
-
     for (i = 0; i < cnt; i++) {
 
         thispt = polypts[i]->pos;
         newquad = whichquad(thispt, x, y);
 
         /* adjust the winding number */
-
         if (oldquad != newquad) {
 
             /* Use mod 4 comparsions to see if we have advanced or */
             /* backed up one quadrant.  */
-
             if (((oldquad + 1) & 3) == newquad)
                 wind++;
             else if (((newquad + 1) & 3) == oldquad)
@@ -1753,18 +1561,13 @@ Point** polypts;
     }
 
     /* non-zero return value means the point is in the polygon */
-
     return (wind);
 }
-
 
 /******************************************************************************
 Figure out which quadrent pt is in with respect to (x,y).
 ******************************************************************************/
-
-int whichquad(pt, x, y)
-Vector pt;
-float x, y;
+int whichquad(Vector pt, float x, float y)
 {
     int quadrant;
 
@@ -1795,9 +1598,7 @@ Exit:
   imat - inverse transformation
   returns 1 if we've got bad plane equation, 0 if everything is okay
 ******************************************************************************/
-int face_to_xy_plane(a, b, c, d, mat, imat)
-float a, b, c, d;
-Matrix mat, imat;
+int face_to_xy_plane(float a, float b, float c, float d, Matrix mat, Matrix imat)
 {
     int i, j;
     float dx, dy, dz;
@@ -1872,13 +1673,13 @@ Matrix mat, imat;
 Re-order the edges by down-weighting edges that are nearly parallel to the
 boundary.
 ******************************************************************************/
-reorder_edges()
+void reorder_edges()
 {
     int i, j;
     float max_len;
-    Edge* e;
-    Edge* edge;
-    Point* p1, *p2;
+    TriangulateEdge* e;
+    TriangulateEdge* edge;
+    TriangulatePoint* p1, *p2;
     float dot, dot_max;
     float near_one = 0.99;
 
@@ -1954,7 +1755,5 @@ reorder_edges()
 #if 0
         printf("len = %f\n", edge->len);
 #endif
-
     }
 }
-

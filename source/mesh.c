@@ -1,33 +1,45 @@
 /*
+ * Mesh building routines.
+ * Greg Turk, September 1993
+ *
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Mesh building routines.
-
-Greg Turk, September 1993
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
+// External
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
 #include <string.h>
 
-#include "zipper.h"
+// Internal
+#include "mesh.h"
 #include "raw.h"
+#include "near.h"
+#include "meshops.h"
 
 // Parameters
 static int CONF_EDGE_ZERO;
@@ -82,14 +94,9 @@ Entry:
   sc    - scan data to make into triangle mesh
   level - level of mesh (how detailed), in [0,1,2,3]
 ******************************************************************************/
-
-create_scan_mesh(sc, level)
-Scan* sc;
-int level;
+void create_scan_mesh(Scan* sc, int level)
 {
     Mesh* mesh;
-    Mesh* make_mesh_raw();
-    Mesh* make_mesh_ply();
 
     /* return if we've already created this mesh */
     if (sc->meshes[level] != NULL)
@@ -119,7 +126,6 @@ int level;
            sc->name, level + 1, mesh->nverts, mesh->ntris);
 }
 
-
 /******************************************************************************
 Create a triangle mesh from scan data.
 
@@ -132,10 +138,7 @@ Exit:
   returns pointer to newly-created mesh
 ******************************************************************************/
 #if 0
-Mesh* make_mesh(sc, level, table_dist)
-Scan* sc;
-int level;
-float table_dist;
+Mesh* make_mesh(Scan* sc, int level, float table_dist)
 {
     int i, j;
     int ii, jj;
@@ -158,7 +161,6 @@ float table_dist;
     Triangle* t1, *t2;
 
     /* decide if this is rotational or translational scan */
-
     if (gs->flags & FLAG_CARTESIAN)
         rotational_flag = 0;
     else
@@ -166,19 +168,15 @@ float table_dist;
 
     /* pick how far apart the mesh samples are, based on the level of */
     /* detail requested */
-
     inc = level_to_inc(level);
 
     /* get maximum okay length of a triangle edge */
-
     max_length = edge_length_max(level);
 
     /* create mesh */
-
     mesh = (Mesh*) malloc(sizeof(Mesh));
 
     /* allocate space for new triangles and vertices */
-
     mesh->nverts = 0;
     max_lt = (gs->nlt - 1) / inc + 1;
     max_lg = (gs->nlg - 1) / inc + 1;
@@ -198,13 +196,11 @@ float table_dist;
 
     /* create table saying whether a vertex is okay and where it is */
     /* in the vertex list */
-
     vert_index = (int*) malloc(sizeof(int) * max_lt * max_lg);
     for (i = 0; i < max_lt * max_lg; i++)
         vert_index[i] = -1;
 
     /* create the vertices */
-
     for (i = 0, a = 0; i < gs->nlt; i += inc, a++) {
         for (j = 0, b = 0; j < gs->nlg; j += inc, b++) {
             result = get_gs_coord(sc, i, j, vec);
@@ -220,7 +216,6 @@ float table_dist;
     }
 
     /* create the triangles */
-
     for (i = 0; i < max_lt - 1; i ++)
         for (j = 0; j < max_lg - 1 + rotational_flag; j ++) {
 
@@ -346,11 +341,7 @@ Entry:
 Exit:
   returns pointer to newly-created mesh
 ******************************************************************************/
-
-Mesh* make_mesh_raw(sc, level, table_dist)
-Scan* sc;
-int level;
-float table_dist;
+Mesh* make_mesh_raw(Scan* sc, int level, float table_dist)
 {
     int i, j;
     int ii, jj;
@@ -371,19 +362,15 @@ float table_dist;
 
     /* pick how far apart the mesh samples are, based on the level of */
     /* detail requested */
-
     inc = level_to_inc(level);
 
     /* get maximum okay length of a triangle edge */
-
     max_length = edge_length_max(level);
 
     /* create mesh */
-
     mesh = (Mesh*) malloc(sizeof(Mesh));
 
     /* allocate space for new triangles and vertices */
-
     mesh->nverts = 0;
     max_lt = (rawdata->nlt - 1) / inc + 1;
     max_lg = (rawdata->nlg - 1) / inc + 1;
@@ -403,13 +390,11 @@ float table_dist;
 
     /* create table saying whether a vertex is okay and where it is */
     /* in the vertex list */
-
     vert_index = (int*) malloc(sizeof(int) * max_lt * max_lg);
     for (i = 0; i < max_lt * max_lg; i++)
         vert_index[i] = -1;
 
     /* create the vertices */
-
     for (i = 0, a = 0; i < rawdata->nlt; i += inc, a++) {
         for (j = 0, b = 0; j < rawdata->nlg; j += inc, b++) {
             result = get_raw_coord(sc, i, j, vec);
@@ -425,7 +410,6 @@ float table_dist;
     }
 
     /* create the triangles */
-
     for (i = 0; i < max_lt - 1; i ++)
         for (j = 0; j < max_lg - 1; j ++) {
 
@@ -483,7 +467,7 @@ float table_dist;
     find_vertex_normals(mesh);
 
     /* compute certainty about vertex positions */
-    vertex_errors(mesh, sc, 0);
+    vertex_errors(mesh, sc, 0, 0);
 
     /* free the space used by the index table */
     free(vert_index);
@@ -501,7 +485,6 @@ float table_dist;
     return (mesh);
 }
 
-
 /******************************************************************************
 Create a triangle mesh from scan data.
 
@@ -513,11 +496,7 @@ Entry:
 Exit:
   returns pointer to newly-created mesh
 ******************************************************************************/
-
-Mesh* make_mesh_ply(sc, level, table_dist)
-Scan* sc;
-int level;
-float table_dist;
+Mesh* make_mesh_ply(Scan* sc, int level, float table_dist)
 {
     int i, j;
     int ii, jj;
@@ -537,19 +516,15 @@ float table_dist;
 
     /* pick how far apart the mesh samples are, based on the level of */
     /* detail requested */
-
     inc = level_to_inc(level);
 
     /* get maximum okay length of a triangle edge */
-
     max_length = edge_length_max(level);
 
     /* create mesh */
-
     mesh = (Mesh*) malloc(sizeof(Mesh));
 
     /* allocate space for new triangles and vertices */
-
     mesh->nverts = 0;
     max_lt = (plydata->nlt - 1) / inc + 1;
     max_lg = (plydata->nlg - 1) / inc + 1;
@@ -570,13 +545,11 @@ float table_dist;
     mesh->parent_scan = sc;
 
     /* create a list saying whether a vertex is going to be used */
-
     vert_index = (int*) malloc(sizeof(int) * plydata->num_points);
     for (i = 0; i < plydata->num_points; i++)
         vert_index[i] = -1;
 
     /* see which vertices will be used in a triangle */
-
     for (i = 0; i <= nlt - inc; i += inc)
         for (j = 0; j <= nlg - inc; j += inc) {
             in1 = plydata->pnt_indices[i + j * nlt];
@@ -585,7 +558,6 @@ float table_dist;
         }
 
     /* create the vertices */
-
     for (i = 0; i < plydata->num_points; i++) {
         if (vert_index[i] == -1)
             continue;
@@ -602,7 +574,6 @@ float table_dist;
     }
 
     /* create the triangles */
-
     for (i = 0; i < nlt - inc; i += inc)
         for (j = 0; j < nlg - inc; j += inc) {
 
@@ -688,7 +659,6 @@ float table_dist;
     return (mesh);
 }
 
-
 /******************************************************************************
 Compute how much error should be associated with the vertices of a mesh.
 
@@ -698,11 +668,7 @@ Entry:
   rot_flag - mesh from a rotational scan? 1 = rotational scan, 0 = linear scan
   mult     - multiply confidence by current value?
 ******************************************************************************/
-
-vertex_errors(mesh, scan, rot_flag, mult)
-Mesh* mesh;
-Scan* scan;
-int rot_flag, mult;
+void vertex_errors(Mesh* mesh, Scan* scan, int rot_flag, int mult)
 {
     int i;
     float val;
@@ -710,7 +676,7 @@ int rot_flag, mult;
     int lg;
     float c, s;
 
-    if (rot_flag)
+    if (rot_flag) {
         /* rotational scans */
         for (i = 0; i < mesh->nverts; i++) {
 
@@ -736,7 +702,8 @@ int rot_flag, mult;
                 vert->confidence *= val;
             else
                 vert->confidence = val;
-        } else
+        }
+    } else {
         /* for linear scans */
         for (i = 0; i < mesh->nverts; i++) {
 
@@ -763,8 +730,8 @@ int rot_flag, mult;
             else
                 vert->confidence = val;
         }
+    }
 }
-
 
 /******************************************************************************
 Lower the confidence value on edges.
@@ -773,10 +740,7 @@ Entry:
   mesh  - mesh on which to lower the edge confidence
   level - level of mesh detail
 ******************************************************************************/
-
-lower_edge_confidence(mesh, level)
-Mesh* mesh;
-int level;
+void lower_edge_confidence(Mesh* mesh, int level)
 {
     int i, j;
     int pass;
@@ -805,7 +769,6 @@ int level;
 
     /* make several passes through the vertices */
     for (pass = 1; pass < chew_count; pass++) {
-
         /* propagate higher on-edge values away from edges */
         for (i = 0; i < mesh->nverts; i++) {
 
@@ -819,11 +782,9 @@ int level;
                     break;
                 }
         }
-
     }
 
     /* lower the confidences on the edge */
-
     if (CONF_EDGE_ZERO) {
         recip = 1.0 / (chew_count);
 
@@ -851,16 +812,13 @@ int level;
     }
 }
 
-
 /******************************************************************************
 Free up all the memory used in a mesh.
 
 Entry:
   mesh - mesh to clear out
 ******************************************************************************/
-
-clear_mesh(mesh)
-Mesh* mesh;
+void clear_mesh(Mesh* mesh)
 {
     int i;
     Vertex* v;
@@ -907,7 +865,6 @@ Mesh* mesh;
     mesh->nedges = 0;
 }
 
-
 /******************************************************************************
 Create a new vertex and add it to the list of vertices in a mesh.
 
@@ -918,15 +875,11 @@ Entry:
 Exit:
   returns index within list to new vertex
 ******************************************************************************/
-
-int make_vertex(mesh, vec)
-Mesh* mesh;
-Vector vec;
+int make_vertex(Mesh* mesh, Vector vec)
 {
     Vertex* vert;
 
     /* maybe make room for more vertices */
-
     if (mesh->nverts == mesh->max_verts) {
         mesh->max_verts = (int)(mesh->max_verts * 1.5);
         mesh->verts = (Vertex**)
@@ -934,7 +887,6 @@ Vector vec;
     }
 
     /* create new vertex and add it to the list */
-
     vert = (Vertex*) malloc(sizeof(Vertex));
     vert->coord[X] = vec[X];
     vert->coord[Y] = vec[Y];
@@ -965,10 +917,8 @@ Vector vec;
     mesh->nverts++;
 
     /* return index to the new vertex */
-
     return (mesh->nverts - 1);
 }
-
 
 /******************************************************************************
 Create a new triangle and add it to the list in a mesh.
@@ -981,7 +931,6 @@ Entry:
 Exit:
   returns pointer to newly-created triangle, or NULL if triangle was too big
 ******************************************************************************/
-
 Triangle* make_triangle(Mesh* mesh, Vertex* vt1, Vertex* vt2, Vertex* vt3, float max_len)
 {
     int i, j;
@@ -1009,7 +958,6 @@ Triangle* make_triangle(Mesh* mesh, Vertex* vt1, Vertex* vt2, Vertex* vt3, float
     vnorm(cross);
 
     /* create new triangle and add it to the list */
-
     tri = (Triangle*) malloc(sizeof(Triangle));
     tri->verts[0] = vt1;
     tri->verts[1] = vt2;
@@ -1028,7 +976,6 @@ Triangle* make_triangle(Mesh* mesh, Vertex* vt1, Vertex* vt2, Vertex* vt3, float
     mesh->ntris++;
 
     /* add this new triangle to each of its vertices lists */
-
     add_tri_to_vert(vt1, tri);
     add_tri_to_vert(vt2, tri);
     add_tri_to_vert(vt3, tri);
@@ -1089,11 +1036,7 @@ Entry:
   dverts - flag saying whether to delete un-used vertices (1 = delete them,
        0 = leave them alone)
 ******************************************************************************/
-
-delete_triangle(tri, mesh, dverts)
-Triangle* tri;
-Mesh* mesh;
-int dverts;
+void delete_triangle(Triangle* tri, Mesh* mesh, int dverts)
 {
     int i;
     int index;
@@ -1120,7 +1063,6 @@ int dverts;
     free(tri);
 }
 
-
 /******************************************************************************
 Remove a triangle from the list of triangles of a given vertex.
 
@@ -1132,13 +1074,7 @@ Entry:
   dverts - flag saying whether to delete un-used vertices (1 = delete them,
        0 = leave them alone)
 ******************************************************************************/
-
-remove_tri_from_vert(vert, tri, num, mesh, dverts)
-Vertex* vert;
-Triangle* tri;
-int num;
-Mesh* mesh;
-int dverts;
+void remove_tri_from_vert(Vertex* vert, Triangle* tri, int num, Mesh* mesh, int dverts)
 {
     int i;
     int index;
@@ -1249,7 +1185,6 @@ int dverts;
         delete_vertex(vert, mesh);
 }
 
-
 /******************************************************************************
 Remove a vertex from a mesh.
 
@@ -1257,10 +1192,7 @@ Entry:
   vert - vertex to remove
   mesh - mesh to remove vertex from
 ******************************************************************************/
-
-delete_vertex(vert, mesh)
-Vertex* vert;
-Mesh* mesh;
+void delete_vertex(Vertex* vert, Mesh* mesh)
 {
     int index;
 
@@ -1277,25 +1209,20 @@ Mesh* mesh;
     mesh->verts[index]->index = index;
 }
 
-
 /******************************************************************************
 Remove all the vertices of a mesh that are used by zero triangles.
 
 Entry:
   mesh - mesh to remove un-used triangles from
 ******************************************************************************/
-
-remove_unused_verts(mesh)
-Mesh* mesh;
+void remove_unused_verts(Mesh* mesh)
 {
     int i;
     Vertex* v;
     int count = 0;
 
     /* examine each vertex of the mesh */
-
     for (i = mesh->nverts - 1; i >= 0; i--) {
-
         v = mesh->verts[i];
 
         /* delete a vertex if it has no vertices and no triangles */
@@ -1316,7 +1243,6 @@ Mesh* mesh;
     */
 }
 
-
 /******************************************************************************
 Check to see that a proposed triangle is okay to add to a mesh.
 
@@ -1327,18 +1253,13 @@ Entry:
 Exit:
   returns 1 if proposed triangle is okay, 0 if it is not
 ******************************************************************************/
-
-int check_proposed_tri(v1, v2, v3)
-Vertex* v1, *v2, *v3;
+int check_proposed_tri(Vertex* v1, Vertex* v2, Vertex* v3)
 {
     /* check each edge of proposed triangle */
-
     if (check_proposed_edge(v1, v2) == 0)
         return (0);
-
     if (check_proposed_edge(v2, v3) == 0)
         return (0);
-
     if (check_proposed_edge(v3, v1) == 0)
         return (0);
 
@@ -1349,7 +1270,6 @@ Vertex* v1, *v2, *v3;
 
     return (1);
 }
-
 
 /******************************************************************************
 Check to see that a proposed new edge (for a new triangle) is okay to add.
@@ -1364,9 +1284,7 @@ Entry:
 Exit:
   returns 1 if proposed edge is okay, 0 if it is not
 ******************************************************************************/
-
-int check_proposed_edge(v1, v2)
-Vertex* v1, *v2;
+int check_proposed_edge(Vertex* v1, Vertex* v2)
 {
     int i, j;
     Triangle* tri;
@@ -1449,10 +1367,7 @@ Entry:
   vert - the vertex whose list is to be expanded
   tri  - the triangle to add to the list
 ******************************************************************************/
-
-add_tri_to_vert(vert, tri)
-Vertex* vert;
-Triangle* tri;
+void add_tri_to_vert(Vertex* vert, Triangle* tri)
 {
     /* maybe allocate more room for triangle list */
     if (vert->ntris >= vert->max_tris) {
@@ -1465,18 +1380,13 @@ Triangle* tri;
     vert->tris[vert->ntris++] = tri;
 }
 
-
 /******************************************************************************
 Compute the geometric information of a triangle from its vertices.
 ******************************************************************************/
-
-int
-set_triangle_geometry(tri)
-Triangle* tri;
+int set_triangle_geometry(Triangle* tri)
 {
     int result;
-
-    result = plane_thru_vectors(tri->verts[0], tri->verts[1], tri->verts[2],
+    result = plane_thru_vectors(tri->verts[0]->coord, tri->verts[1]->coord, tri->verts[2]->coord,
                                 &tri->aa, &tri->bb, &tri->cc, &tri->dd);
 
     if (result == 1) {
@@ -1490,10 +1400,8 @@ Triangle* tri;
     */
 
     result = compute_edge_planes(tri);
-
     return result;
 }
-
 
 /******************************************************************************
 Determine equation of the plane containing three vectors.
@@ -1505,10 +1413,7 @@ Exit:
   aa,bb,cc,dd - describes plane
   returns 0 if completed normally, 1 if degenerate plane
 ******************************************************************************/
-
-int plane_thru_vectors(v0, v1, v2, aa, bb, cc, dd)
-Vector v0, v1, v2;
-float* aa, *bb, *cc, *dd;
+int plane_thru_vectors(Vector v0, Vector v1, Vector v2, float* aa, float* bb, float* cc, float* dd)
 {
     double a, b, c, d;
     double len;
@@ -1543,7 +1448,6 @@ float* aa, *bb, *cc, *dd;
     return (0);
 }
 
-
 /******************************************************************************
 Compute planes that pass through edges of a triangle and are perpendicular
 to the plane containing the triangle.
@@ -1551,10 +1455,7 @@ to the plane containing the triangle.
 Entry:
   tri - triangle to compute edge planes for
 ******************************************************************************/
-
-int
-compute_edge_planes(tri)
-Triangle* tri;
+int compute_edge_planes(Triangle* tri)
 {
     int i;
     Vector v;
@@ -1562,7 +1463,6 @@ Triangle* tri;
     float a, b, c, d;
 
     /* find plane through two vertices and perpendicular to plane of triangle */
-
     for (i = 0; i < 3; i++) {
 
         v0 = tri->verts[i]->coord;
@@ -1595,25 +1495,20 @@ Triangle* tri;
     return 0;
 }
 
-
 /******************************************************************************
 Calculate vertex normals by averaging the normals of the vertice's triangles.
 
 Entry:
   mesh - mesh to find vertex normals for
 ******************************************************************************/
-
-find_vertex_normals(mesh)
-Mesh* mesh;
+void find_vertex_normals(Mesh* mesh)
 {
     int i;
 
     /* go through all vertices of the mesh */
-
     for (i = 0; i < mesh->nverts; i++)
         find_vertex_normal(mesh->verts[i]);
 }
-
 
 /******************************************************************************
 Find normal at a vertex.
@@ -1621,9 +1516,7 @@ Find normal at a vertex.
 Entry:
   vert - vertex at which to find surface normal
 ******************************************************************************/
-
-find_vertex_normal(vert)
-Vertex* vert;
+void find_vertex_normal(Vertex* vert)
 {
     int j;
     Vector sum;
@@ -1653,25 +1546,20 @@ Vertex* vert;
     vcopy(sum, vert->normal);
 }
 
-
 /******************************************************************************
 Find which vertices of a mesh are on the edge of the mesh.
 
 Entry:
   mesh - mesh to find edges of
 ******************************************************************************/
-
-find_mesh_edges(mesh)
-Mesh* mesh;
+void find_mesh_edges(Mesh* mesh)
 {
     int i;
 
     /* examine each vertex of a mesh to see if it's on the edge */
-
     for (i = 0; i < mesh->nverts; i++)
         vertex_edge_test(mesh->verts[i]);
 }
-
 
 /******************************************************************************
 Mark a vertex to say whether it is on the edge of a mesh or not.
@@ -1682,9 +1570,7 @@ Entry:
 Exit:
   returns 0 if everything was okay, 1 if the mesh is build funny
 ******************************************************************************/
-
-int vertex_edge_test(vert)
-Vertex* vert;
+int vertex_edge_test(Vertex* vert)
 {
     int i;
     Triangle* tri;
@@ -1695,13 +1581,11 @@ Vertex* vert;
     /* initialize list that counts how many times an edge has been marked */
     /* (each edge should be marked twice, once for each triangle, */
     /*  otherwise the vertex is on an edge) */
-
     for (i = 0; i < vert->nverts; i++)
         vert->verts[i]->count = 0;
 
     /* go through each triangle of vertex, counting how many times an */
     /* adjacent vertex has been used */
-
     for (i = 0; i < vert->ntris; i++) {
         tri = vert->tris[i];
 
@@ -1713,7 +1597,6 @@ Vertex* vert;
 
     /* examine the counts of the neighboring vertices to see if they */
     /* prove the vertex to be an edge.  also check for mesh consistancy */
-
     on_edge = 0;  /* assume we're not on an edge */
 
     for (i = 0; i < vert->nverts; i++) {
@@ -1741,7 +1624,6 @@ Vertex* vert;
     return (bad_mesh);
 }
 
-
 /******************************************************************************
 Do all sorts of checks to make sure mesh is consistant.  Remove vertices and
 triangles that cause problems.
@@ -1749,9 +1631,7 @@ triangles that cause problems.
 Entry:
   scan - scan containing the mesh to clean up
 ******************************************************************************/
-
-clean_up_mesh(scan)
-Scan* scan;
+void clean_up_mesh(Scan* scan)
 {
     int i, j;
     Mesh* mesh;
@@ -1771,9 +1651,6 @@ Scan* scan;
 
     /* compute which vertices are on the boundary */
     find_mesh_edges(mesh);
-
-
-
 
     /* delete vertices where 4 edges meet */
     /* and eliminate triple edges (or greater) */
@@ -1980,4 +1857,3 @@ Scan* scan;
     /* re-compute all vertex normals */
     find_vertex_normals(mesh);
 }
-

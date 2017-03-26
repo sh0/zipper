@@ -1,31 +1,48 @@
 /*
+ * Remove redundant triangles.
+ *
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Remove redundant triangles.
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
-#include <math.h>
+// External
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
-#include "zipper.h"
-#include "matrix.h"
+// Internal
+#include "remove.h"
+#include "mesh.h"
+#include "draw.h"
+#include "near.h"
+#include "edges.h"
 
+// Variables
 static float global_near_dist; /* for passing to mark_for_eating */
+Triangle* new_tris[20000];
+int new_tri_count;
 
 // Parameters
 static float EAT_NEAR_COS;
@@ -85,7 +102,7 @@ float get_eat_start_factor()
 /******************************************************************************
 Zipper together everything all at once.
 ******************************************************************************/
-do_it_all()
+void do_it_all()
 {
     printf("Zipper: eat_edge_pair()\n");
     eat_edge_pair(scans[0], scans[1]);
@@ -112,35 +129,7 @@ do_it_all()
         fill_in_holes(scans[0], scans[2]);
         move_vertices(scans[2], scans[0]);
     }
-
-    if (nscans == 6) {
-
-        int num;
-
-        printf("starting third part\n");
-
-        num = 1;
-        init_eating(scans[4]);
-        while (num > 0)
-            num = eat_mesh_edges(scans[0], scans[4], 1, 0, EAT_NEAR_DIST);
-        done_eating(scans[4]);
-        zipper_meshes(scans[0], scans[4]);
-        fill_in_holes(scans[0], scans[4]);
-        move_vertices(scans[4], scans[0]);
-
-        printf("starting fourth part\n");
-
-        num = 1;
-        init_eating(scans[5]);
-        while (num > 0)
-            num = eat_mesh_edges(scans[0], scans[5], 1, 0, EAT_NEAR_DIST);
-        done_eating(scans[5]);
-        zipper_meshes(scans[0], scans[5]);
-        fill_in_holes(scans[0], scans[5]);
-        move_vertices(scans[5], scans[0]);
-    }
 }
-
 
 /******************************************************************************
 Eat away at the edges of two meshes where they are aligned.
@@ -157,8 +146,7 @@ void eat_edge_proc()
 /******************************************************************************
 Repeatedly eat away at a pair of meshes.
 ******************************************************************************/
-eat_edge_pair(sc1, sc2)
-Scan* sc1, *sc2;
+void eat_edge_pair(Scan* sc1, Scan* sc2)
 {
     int i;
     int num1, num2;
@@ -175,20 +163,15 @@ Scan* sc1, *sc2;
     init_eating(sc2);
 
 #if 1
-
     /* use some larger distances for a few cycles */
-
-    use_large_search(1);
-
+    //use_large_search(1);
     for (i = 0; i < EAT_START_ITERS; i++) {
         num1 = eat_mesh_edges(sc1, sc2, 0, 2, 1, EAT_NEAR_DIST * EAT_START_FACTOR);
         num2 = eat_mesh_edges(sc2, sc1, 0, 2, 1, EAT_NEAR_DIST * EAT_START_FACTOR);
         if (num1 == 0 && num2 == 0)
             break;
     }
-
-    use_large_search(0);
-
+    //use_large_search(0);
 #endif
 
     /* first eat only those triangles with a majority of less certain */
@@ -216,7 +199,6 @@ Scan* sc1, *sc2;
     done_eating(sc2);
 }
 
-
 /******************************************************************************
 Make ready for eating away at a mesh.  Must be called before calling
 eat_mesh_edges().
@@ -224,8 +206,7 @@ eat_mesh_edges().
 Entry:
   scan - the scan whose mesh will be eaten
 ******************************************************************************/
-init_eating(scan)
-Scan* scan;
+void init_eating(Scan* scan)
 {
     int i;
     Mesh* mesh;
@@ -285,7 +266,6 @@ Scan* scan;
     }
 }
 
-
 /******************************************************************************
 Clean up after eating away at a mesh.  Should be called after calling
 eat_mesh_edges().
@@ -293,8 +273,7 @@ eat_mesh_edges().
 Entry:
   scan - the scan whose mesh was be eaten
 ******************************************************************************/
-done_eating(scan)
-Scan* scan;
+void done_eating(Scan* scan)
 {
     int i;
     Mesh* mesh;
@@ -328,11 +307,7 @@ Entry:
 Exit:
   returns how many triangles were removed
 ******************************************************************************/
-int eat_mesh_edges(sc1, sc2, draw, conf, to_edge, near_dist)
-Scan* sc1, *sc2;
-int draw;
-int conf, to_edge;
-float near_dist;
+int eat_mesh_edges(Scan* sc1, Scan* sc2, int draw, int conf, int to_edge, float near_dist)
 {
     int i, j, k;
     Mesh* m2;
@@ -417,10 +392,7 @@ Entry:
   to_edge - mark all the way to the edge?  If not, then stop short.
 
 ******************************************************************************/
-void mark_for_eating(sc1, sc2, draw, conf, to_edge)
-Scan* sc1, *sc2;
-int draw;
-int conf, to_edge;
+void mark_for_eating(Scan* sc1, Scan* sc2, int draw, int conf, int to_edge)
 {
     int i, j;
     Mesh* m1, *m2;
@@ -524,7 +496,6 @@ int conf, to_edge;
     }
 }
 
-
 /******************************************************************************
 Zipper together a model.
 ******************************************************************************/
@@ -532,7 +503,6 @@ void zipper_proc()
 {
     move_vertices(scans[1], scans[0]);
 }
-
 
 /******************************************************************************
 Align edges of meshes.
@@ -550,8 +520,7 @@ Entry:
   sc1 - scan with first mesh. all triangles go into this mesh
   sc2 - scan with second mesh. to be emptied
 ******************************************************************************/
-gather_triangles(sc1, sc2)
-Scan* sc1, *sc2;
+void gather_triangles(Scan* sc1, Scan* sc2)
 {
     int i;
     Mesh* m1, *m2;
@@ -655,8 +624,7 @@ Entry:
   sc1 - scan with first mesh
   sc2 - scan with second mesh
 ******************************************************************************/
-zipper_meshes(sc1, sc2)
-Scan* sc1, *sc2;
+void zipper_meshes(Scan* sc1, Scan* sc2)
 {
     int i, j;
     Mesh* m1, *m2;
@@ -770,9 +738,6 @@ Scan* sc1, *sc2;
     }
 }
 
-Triangle* new_tris[20000];
-int new_tri_count;
-
 /******************************************************************************
 Fill in triangular holes between meshes left by zippering process.
 
@@ -780,8 +745,7 @@ Entry:
   sc1 - scan with first mesh
   sc2 - scan with second mesh
 ******************************************************************************/
-fill_in_holes(sc1, sc2)
-Scan* sc1, *sc2;
+void fill_in_holes(Scan* sc1, Scan* sc2)
 {
     int i, j, k;
     Mesh* m1, *m2;
@@ -902,31 +866,25 @@ Scan* sc1, *sc2;
     }
 
     /* examine loops for other kind of triangle hole */
-
     for (i = 0; i < list2->nloops; i++) {
 
         /* look through each vertex in the loop */
-
         e_orig = list2->loops[i];
         for (e = e_orig; e->next != e_orig; e = e->next) {
 
             /* we want both vertices of this edge to be moved */
-
             if (e->v1->moving == 0 || e->v2->moving == 0)
                 continue;
 
             /* examine those vertices that this edge has been moved to */
-
             vert1 = e->v1->move_to;
             vert2 = e->v2->move_to;
 
             /* these vertices must be distinct */
-
             if (vert1 == vert2)
                 continue;
 
             /* we want both these vertices to be on an edge */
-
             if (vert1->nedges == 0 || vert2->nedges == 0)
                 continue;
 
@@ -952,14 +910,12 @@ Scan* sc1, *sc2;
             }
 
             /* go on if we didn't get a vertex match above */
-
             if (!found)
                 continue;
 
         here: /* oh no! */
 
             /* create a new triangle */
-
             printf("other kind of new triangle\n");
 
             tri = (Triangle*) malloc(sizeof(Triangle));
@@ -1010,7 +966,6 @@ Scan* sc1, *sc2;
     }
 }
 
-
 /******************************************************************************
 Find out which way an edge should be oriented, based on a triangle that
 already contains the two vertices in the edge.
@@ -1021,9 +976,7 @@ Entry:
 Exit:
   returns 0 or 1 based on orientation
 ******************************************************************************/
-
-int find_edge_orientation(v1, v2)
-Vertex* v1, *v2;
+int find_edge_orientation(Vertex* v1, Vertex* v2)
 {
     int i;
     Triangle* tri;
@@ -1056,7 +1009,6 @@ Vertex* v1, *v2;
     exit(-1);
 }
 
-
 /******************************************************************************
 Move vertices from one mesh to another.
 
@@ -1064,9 +1016,7 @@ Entry:
   source - scan to move from
   dest   - scan to move to
 ******************************************************************************/
-
-move_vertices(source, dest)
-Scan* source, *dest;
+void move_vertices(Scan* source, Scan* dest)
 {
     int i, j, k;
     Mesh* msource, *mdest;
@@ -1191,7 +1141,6 @@ Scan* source, *dest;
     }
 
     /* copy over the triangles */
-
     for (i = 0; i < msource->ntris; i++) {
 
         tri = msource->tris[i];
@@ -1214,7 +1163,6 @@ Scan* source, *dest;
 
 #if 0
     /* add in the new triangles */
-
     for (i = 0; i < new_tri_count; i++)
         make_triangle(mdest, new_tris[i]->verts[0],
                       new_tris[i]->verts[1],
@@ -1241,4 +1189,3 @@ Scan* source, *dest;
     msource->edges_valid = 0;
     mdest->edges_valid   = 0;
 }
-

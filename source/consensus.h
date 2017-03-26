@@ -25,36 +25,53 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ZIPPER_MESHOPS_H
-#define ZIPPER_MESHOPS_H
+#ifndef ZIPPER_CONSENSUS_H
+#define ZIPPER_CONSENSUS_H
 
 // Internal
 #include "zipper.h"
 #include "matrix.h"
 
+// Vertex to help find consensus
+typedef struct Cvert {
+    Vector coord;
+    struct Ctri** tris;
+    unsigned char ntris;
+    struct Cvert* next;
+} Cvert;
+
+// Triangle to help find consensus
+typedef struct Ctri {
+    Cvert* verts[3];
+} Ctri;
+
+typedef struct Cinfo {
+    Vector pos; // consensus position
+    Vector normal; // consensus surface normal (in global coords)
+    float intensity; // consensus intensity
+    float weights;
+    float red, grn, blu; // color
+    int count;
+} Cinfo;
+
+// Parameters
+void update_consensus_resolution();
+void set_consensus_position_dist_factor(float factor);
+float get_consensus_position_dist_factor();
+void set_consensus_normal_dist_factor(float factor);
+float get_consensus_normal_dist_factor();
+void set_consensus_jitter_dist_factor(float factor);
+float get_consensus_jitter_dist_factor();
+
 // Declarations
-void absorb_transform(Scan* sc);
-void fix_bows(Scan* sc);
-int fill_bow(Mesh* mesh, Vertex* vert, Vertex* vin[], Vertex* vout[], int in_out_count);
-void split_triangle(Scan* sc, Triangle* tri, int index1, float t, Triangle** tri1, Triangle** tri2);
-void split_test(Scan* sc);
-int edges_shared_count(Vertex* v1, Vertex* v2);
-Triangle* shared_triangle(int index);
-void fill_small_holes(Scan* sc);
-void fill_hole(Mesh* mesh, Edge* edge, int edge_count);
-void fill_four_hole(Mesh* mesh, Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4);
-void remove_cut_vertices(Scan* scan);
-int remove_a_vertex(Scan* scan, Vertex* v);
-void remove_sliver_tris(Scan* scan, float fract);
-void remove_flat_verts(Scan* scan, float cos_max);
-void remove_bad_aspect_tris(Scan* scan, float max_aspect, float min_cos, int diff);
-void move_vertex(Vertex* v, Vector pos, Mesh* mesh);
-void remove_short_edges(Scan* scan, float fract);
-void collapse_edge(Mesh* mesh, Vertex* v1, Vertex* v2);
-void quarter_mesh(Scan* scan);
-int fill_loop(int loop, Scan* scan);
-void swap_edges(Scan* sc);
-void compute_smoothing(Vertex* v, Vector new_pos);
-void smooth_vertices(Scan* sc);
+void consensus_surface(Scan* scan, int level, float k_scale);
+void new_consensus_surface(Scan* con_scan, Scan** scan_list, int* read_list, int num_scans, int level);
+void marc_find_average_positions(Scan* scan, int level, float k_scale);
+void new_find_average_positions(Scan* con_scan, Scan** scan_list, int* use_old_mesh, int num_scans, int level);
+void intersect_segment_with_mesh(Vertex* v, Mesh* mesh, Scan* vscan, Scan* mscan, float search_dist, int mesh_index);
+void find_average_positions(Scan* scan, int level, float k_scale);
+int count_near_vert();
+Vertex* found_vert_near_vert(int n);
+void verts_near_pos(Mesh* mesh, Vector pnt, Vector norm, float radius);
 
 #endif

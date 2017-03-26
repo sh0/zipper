@@ -25,36 +25,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ZIPPER_MESHOPS_H
-#define ZIPPER_MESHOPS_H
+#ifndef ZIPPER_INTERSECT_H
+#define ZIPPER_INTERSECT_H
 
 // Internal
 #include "zipper.h"
 #include "matrix.h"
 
 // Declarations
-void absorb_transform(Scan* sc);
-void fix_bows(Scan* sc);
-int fill_bow(Mesh* mesh, Vertex* vert, Vertex* vin[], Vertex* vout[], int in_out_count);
-void split_triangle(Scan* sc, Triangle* tri, int index1, float t, Triangle** tri1, Triangle** tri2);
-void split_test(Scan* sc);
-int edges_shared_count(Vertex* v1, Vertex* v2);
-Triangle* shared_triangle(int index);
-void fill_small_holes(Scan* sc);
-void fill_hole(Mesh* mesh, Edge* edge, int edge_count);
-void fill_four_hole(Mesh* mesh, Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4);
-void remove_cut_vertices(Scan* scan);
-int remove_a_vertex(Scan* scan, Vertex* v);
-void remove_sliver_tris(Scan* scan, float fract);
-void remove_flat_verts(Scan* scan, float cos_max);
-void remove_bad_aspect_tris(Scan* scan, float max_aspect, float min_cos, int diff);
-void move_vertex(Vertex* v, Vector pos, Mesh* mesh);
-void remove_short_edges(Scan* scan, float fract);
-void collapse_edge(Mesh* mesh, Vertex* v1, Vertex* v2);
-void quarter_mesh(Scan* scan);
-int fill_loop(int loop, Scan* scan);
-void swap_edges(Scan* sc);
-void compute_smoothing(Vertex* v, Vector new_pos);
-void smooth_vertices(Scan* sc);
+void intersect_meshes(Scan* sc1, Scan* sc2);
+void finish_intersect_meshes(Scan* sc1, Scan* sc2);
+void mark_intersected_tris(Scan* sc1, Scan* sc2);
+void intersect_edge_with_near_tris(Vertex* v1, Vertex* v2, Triangle* cut_tri, Scan* sc1, Scan* sc2);
+void verts_near_vert(Mesh* mesh, Mesh* not_mesh, Vector pnt, Vector norm, float radius);
+void new_tri_intersection(
+    Vertex* v1, Vertex* v2, int share_count,
+    Triangle* near_tri, Triangle* cut_tri, Vector pos,
+    float t, int inward, float dot
+);
+void init_tri_intersection(Triangle* tri);
+void add_intersect_points(Scan* sc1, Scan* sc2);
+void perform_intersect_clipping(Scan* sc1, Scan* sc2);
+int between_cuts(Triangle* tri, Clip_List* clist, int in_vert, int out_vert, Vertex* between_list[]);
+int tri_cut_by_tri(Triangle* tri1, Triangle* tri2, Cut* cuts[], Triangle* tris[]);
 
 #endif

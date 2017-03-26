@@ -25,36 +25,43 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ZIPPER_MESHOPS_H
-#define ZIPPER_MESHOPS_H
+#ifndef ZIPPER_FILL_H
+#define ZIPPER_FILL_H
 
 // Internal
 #include "zipper.h"
 #include "matrix.h"
 
+// Vertex that is part of a hole that is being filled
+typedef struct FillVertex {
+    Vertex* vert; // vertex helping cover the hole
+    unsigned char on_edge; // on the edge of the hole?
+    Vertex* e1, *e2; // adjacent vertices on edge, if any
+} FillVertex;
+
+// Triangle used to fill a hole
+typedef struct FillTri {
+    Triangle* tri; // triangle used to fill hole
+    int index; // index into list containing triangle
+} FillTri;
+
+// Parameters
+void update_fill_resolution();
+void set_fill_edge_length_factor(float factor);
+float get_fill_edge_length_factor();
+
 // Declarations
-void absorb_transform(Scan* sc);
-void fix_bows(Scan* sc);
-int fill_bow(Mesh* mesh, Vertex* vert, Vertex* vin[], Vertex* vout[], int in_out_count);
-void split_triangle(Scan* sc, Triangle* tri, int index1, float t, Triangle** tri1, Triangle** tri2);
-void split_test(Scan* sc);
-int edges_shared_count(Vertex* v1, Vertex* v2);
-Triangle* shared_triangle(int index);
-void fill_small_holes(Scan* sc);
-void fill_hole(Mesh* mesh, Edge* edge, int edge_count);
-void fill_four_hole(Mesh* mesh, Vertex* v1, Vertex* v2, Vertex* v3, Vertex* v4);
-void remove_cut_vertices(Scan* scan);
-int remove_a_vertex(Scan* scan, Vertex* v);
-void remove_sliver_tris(Scan* scan, float fract);
-void remove_flat_verts(Scan* scan, float cos_max);
-void remove_bad_aspect_tris(Scan* scan, float max_aspect, float min_cos, int diff);
-void move_vertex(Vertex* v, Vector pos, Mesh* mesh);
-void remove_short_edges(Scan* scan, float fract);
-void collapse_edge(Mesh* mesh, Vertex* v1, Vertex* v2);
-void quarter_mesh(Scan* scan);
-int fill_loop(int loop, Scan* scan);
-void swap_edges(Scan* sc);
-void compute_smoothing(Vertex* v, Vector new_pos);
-void smooth_vertices(Scan* sc);
+void better_fill_loop(int loop, Scan* scan);
+int fix_fill_size(int loop, Scan* scan, float max_len, float* size);
+int maybe_split_edge(Triangle* tri, Scan* scan, int idx1, int idx2);
+void init_fill_lists();
+void new_ftri(Triangle* tri);
+void delete_ftri(FillTri* ftri);
+void new_fvert(Vertex* vert, int on_edge, Vertex* v1, Vertex* v2);
+void fill_tri_split2(FillTri* ftri, Mesh* mesh, int index);
+void fill_tri_split3(FillTri* ftri, Mesh* mesh, int index);
+void fill_tri_split4(FillTri* ftri, Mesh* mesh, int index);
+void smooth_hole_vertices(Scan* scan);
+void swap_hole_edges(Scan* sc);
 
 #endif

@@ -1,25 +1,34 @@
 /*
+ * Routines for reading and writing to PLY polygon files.
+ * Greg Turk, April 1994
+ *
+ * Copyright (c) 1995-2017, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Stanford University nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Routines for reading and writing to PLY polygon files.
-
-Greg Turk, April 1994
-
----------------------------------------------------------------
-
-Copyright (c) 1994 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.
-
-Permission to use, copy, modify and distribute this software and its
-documentation for any purpose is hereby granted without fee, provided
-that the above copyright notice and this permission notice appear in
-all copies of this software and that you do not sell the software.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-
-*/
-
+// External
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,69 +36,60 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <float.h>
 #include <limits.h>
 
-#include "matrix.h"
-#include "zipper.h"
+// Internal
+#include "ply_wrapper.h"
 #include "raw.h"
 #include "ply.h"
+#include "polyfile.h"
+#include "mesh.h"
+#include "near.h"
 
+// Parameters
 static float RANGE_DATA_SIGMA_FACTOR;
 static float RANGE_DATA_MIN_INTENSITY;
 static int RANGE_DATA_HORIZONTAL_ERODE;
 
-
-set_range_data_sigma_factor(factor)
-float factor;
+void set_range_data_sigma_factor(float factor)
 {
     RANGE_DATA_SIGMA_FACTOR = factor;
 }
 
-
-float
-get_range_data_sigma_factor()
+float get_range_data_sigma_factor()
 {
     return RANGE_DATA_SIGMA_FACTOR;
 }
 
-set_range_data_min_intensity(intensity)
-float intensity;
+void set_range_data_min_intensity(float intensity)
 {
     RANGE_DATA_MIN_INTENSITY = intensity;
 }
 
-
-float
-get_range_data_min_intensity()
+float get_range_data_min_intensity()
 {
     return RANGE_DATA_MIN_INTENSITY;
 }
 
-set_range_data_horizontal_erode(erode)
-int erode;
+void set_range_data_horizontal_erode(int erode)
 {
     RANGE_DATA_HORIZONTAL_ERODE = erode;
 }
 
-
-int
-get_range_data_horizontal_erode()
+int get_range_data_horizontal_erode()
 {
     return RANGE_DATA_HORIZONTAL_ERODE;
 }
 
-
+// Constants
 enum {CONTINUOUS, JUMP_CLOSER, JUMP_FARTHER, LEFT_EDGE, RIGHT_EDGE};
 
 int write_intensity_flag = 1;   /* whether to write out vertex intensities */
 int write_normals_flag = 0;     /* write out vertex normals? */
 int write_colors_flag = 0;      /* write out diffuse colors? */
 
-Scan* new_scan(char*, int);
-
 /* list of the elements in the PLY files */
 char* elem_names[] = {
     "vertex", "face"
 };
-
 
 /* list of property information for a vertex */
 PlyProperty vert_props[] = {
@@ -171,7 +171,6 @@ static A_Triangle* tri_dummy;
 #define toffset(field) ((char *) (&tri_dummy->field) - (char *) tri_dummy)
 
 
-
 /******************************************************************************
 Write out polygons to a PLY file.
 
@@ -179,7 +178,6 @@ Entry:
   sc       - scan to write from
   filename - name of PLY file to write to
 ******************************************************************************/
-
 void write_ply(Scan* sc, char* filename, int writeInfo)
 {
     int i;
@@ -279,7 +277,6 @@ void write_ply(Scan* sc, char* filename, int writeInfo)
     ply_close(ply);
 }
 
-
 int is_range_grid_file(char* filename)
 {
     int i;
@@ -302,7 +299,6 @@ int is_range_grid_file(char* filename)
     return 0;
 }
 
-
 /******************************************************************************
 Read in polygons from a PLY file.
 
@@ -313,7 +309,6 @@ Entry:
 Exit:
   returns 0 if scan created okay, 1 if there was an error
 ******************************************************************************/
-
 int read_ply(char* filename)
 {
     int i, j;
@@ -358,14 +353,11 @@ int read_ply(char* filename)
         strcpy(sc->obj_info[i], obj_info[i]);
     }
 
-
     /* make one mesh */
-
     sc->meshes[mesh_level] = (Mesh*) malloc(sizeof(Mesh));
     mesh = sc->meshes[mesh_level];
 
     /* read in the vertices */
-
     plist = ply_get_element_description(ply, "vertex", &num_elems, &nprops);
     mesh->nverts = 0;
     mesh->max_verts = num_elems + 100;
@@ -384,7 +376,6 @@ int read_ply(char* filename)
     mesh->parent_scan = sc;
 
     /* read in the vertices and triangles */
-
     for (i = 0; i < nelems; i++) {
 
         elem_name = elist[i];
@@ -467,7 +458,6 @@ int read_ply(char* filename)
     return (0);
 }
 
-
 /******************************************************************************
 Read range data from a PLY file.
 
@@ -477,9 +467,7 @@ Entry:
 Exit:
   returns pointer to data, or NULL if it couldn't read from file
 ******************************************************************************/
-
-RangeData* read_ply_geom(name)
-char* name;
+RangeData* read_ply_geom(char* name)
 {
     int i, j, k, index, best_index;
     int xx, yy;
@@ -580,7 +568,6 @@ char* name;
                            (sizeof(int) * plydata->nlt * plydata->nlg);
 
     /* read in the range data */
-
     for (i = 0; i < nelems; i++) {
 
         elem_name = elist[i];
@@ -784,12 +771,7 @@ char* name;
     return (plydata);
 }
 
-
-int
-erode_forward(plydata, continuity, xx, yy, erodeMax)
-RangeData* plydata;
-char* continuity;
-int xx, yy, erodeMax;
+int erode_forward(RangeData* plydata, char* continuity, int xx, int yy, int erodeMax)
 {
     int erode_count, index;
     char cont;
@@ -817,13 +799,7 @@ int xx, yy, erodeMax;
     return erode_count;
 }
 
-
-int
-erode_backward(plydata, continuity,
-               xx, yy, erodeMax)
-RangeData* plydata;
-char* continuity;
-int xx, yy, erodeMax;
+int erode_backward(RangeData* plydata, char* continuity, int xx, int yy, int erodeMax)
 {
     int erode_count, index;
     char cont;
@@ -842,11 +818,7 @@ int xx, yy, erodeMax;
     return erode_count;
 }
 
-
-int
-decide_continuity(plydata, xx, yy)
-RangeData* plydata;
-int xx, yy;
+int decide_continuity(RangeData* plydata, int xx, int yy)
 {
     Vector diff;
     int index, vert_index, next_vert_index;
@@ -880,9 +852,7 @@ int xx, yy;
     }
 }
 
-
-void
-delete_ply_geom(RangeData* plydata)
+void delete_ply_geom(RangeData* plydata)
 {
     free(plydata->points);
     free(plydata->confidence);
@@ -893,6 +863,3 @@ delete_ply_geom(RangeData* plydata)
     free(plydata->pnt_indices);
     free(plydata);
 }
-
-
-

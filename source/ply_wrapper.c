@@ -127,7 +127,7 @@ PlyProperty vert_std_props[] = {
 };
 
 /* list of property information for a vertex */
-#if 0
+#if 1
 PlyProperty tri_props[] = {
     {"vertex_indices", PLY_INT, PLY_INT, 0, 1, PLY_UCHAR, PLY_UCHAR, 0},
 };

@@ -1,5 +1,7 @@
 ## Mesh zippering
 
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
+
 This repository contains 'mesh zippering' code, based on [ZipPack Polygon Mesh Zippering Package](https://graphics.stanford.edu/software/zippack/) version 1.14. The source has been ported from SGI IRIX system to be used on any modern operating system. User interface and mesh alignment code has been removed.
 
 ### Compiling and usage
